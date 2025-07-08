@@ -1,5 +1,6 @@
 #ifndef CORE_H
 #define CORE_H
+#include <stdbool.h>
 #include <stdint.h>
 
 // Piece definitions (uint8)
@@ -50,6 +51,11 @@ typedef struct {
 
 void execute_move(Board *board, uint32_t move);
 
+/*
+ * Returns whether the provided move is a valid castle and,
+ * if `make_move` is true, applies the move to the board.
+ */
+bool castle(Board *board, uint32_t move, bool make_move);
 /*
  * Fills `arr` with all legal moves, encoded as `uint32_t`.
  * `arr` should be `uint32_t[256]`.

@@ -4,9 +4,13 @@
 #include "raylib.h"
 #include "textures.h"
 
+#include <stdio.h>
+#include <string.h>
+
 Game *new_game() {
     Game *game = malloc(sizeof(Game));
-    game->board = board_from_fen("8/8/2r3q1/3B1b2/2Q3R1/8/8/8 w - - 0 1");
+    game->board = board_from_fen(
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
     game->selected_square = (Square){-1, -1};
 
     return game;
@@ -107,6 +111,44 @@ void draw_board(Game *game) {
                               WHITE);
             }
         }
+    }
+
+    draw_debug_text(game);
+}
+
+void draw_debug_text(Game *game) {
+    char *toMove =
+        game->board->moves % 2 == 0 ? "White to move" : "Black to move";
+    char numMoves[32];
+    sprintf(numMoves, "Moves: %d", game->board->moves);
+
+    char castlingRights[5] = "";
+    int i = 0;
+
+    if (game->board->castling_rights & CASTLE_WHITE_KING)
+        castlingRights[i++] = 'K';
+
+    if (game->board->castling_rights & CASTLE_WHITE_QUEEN)
+        castlingRights[i++] = 'Q';
+
+    if (game->board->castling_rights & CASTLE_BLACK_KING)
+        castlingRights[i++] = 'k';
+
+    if (game->board->castling_rights & CASTLE_BLACK_QUEEN)
+        castlingRights[i++] = 'q';
+
+    castlingRights[i] = '\0';
+
+    const char *debugLines[] = {toMove, numMoves, castlingRights};
+    int fontSize = 20;
+    int lineSpacing = 4;
+    int padding = 10;
+    int numLines = sizeof(debugLines) / sizeof(debugLines[0]);
+
+    for (int i = 0; i < numLines; i++) {
+        int posX = padding;
+        int posY = padding + i * (fontSize + lineSpacing);
+        DrawText(debugLines[i], posX, posY, fontSize, DARKGRAY);
     }
 }
 

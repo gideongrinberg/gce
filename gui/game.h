@@ -26,6 +26,8 @@ void game_update(Game *game);
 void game_draw(Game *game);
 
 void draw_board(Game *game);
+void draw_debug_text(Game *game);
+
 bool get_mouse_square(int mouseX, int mouseY, int screenWidth, int screenHeight,
                       int *outRank, int *outFile);
 #endif // GUI_H

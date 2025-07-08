@@ -1,5 +1,6 @@
 #include "core.h"
 #include <ctype.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,6 +11,11 @@ void execute_move(Board *board, uint32_t move) {
     int promo = MOVE_PROMO(move);
 
     uint8_t piece = board->board[from];
+    if (GET_TYPE(piece) == KING) {
+        if (castle(board, move, true)) {
+            return;
+        }
+    }
     if (promo != PROMO_NONE) {
         uint8_t piece_type;
         switch (promo) {
@@ -33,6 +39,67 @@ void execute_move(Board *board, uint32_t move) {
     board->board[from] = EMPTY;
     board->board[to] = piece;
     board->moves++;
+}
+
+bool castle(Board *board, uint32_t move, bool make_move) {
+    int from = MOVE_FROM(move);
+    int to = MOVE_TO(move);
+    int rook_from, rook_to, color;
+    if (from == 0x04 && to == 0x06 &&
+        (board->castling_rights & CASTLE_WHITE_KING)) {
+        rook_from = 0x07;
+        rook_to = 0x05;
+        color = PIECE_WHITE;
+    } else if (from == 0x04 && to == 0x02 &&
+               (board->castling_rights & CASTLE_WHITE_QUEEN)) {
+        rook_from = 0x00;
+        rook_to = 0x03;
+        color = PIECE_WHITE;
+    } else if (from == 0x74 && to == 0x76 &&
+               (board->castling_rights & CASTLE_BLACK_KING)) {
+        rook_from = 0x77;
+        rook_to = 0x75;
+        color = PIECE_BLACK;
+    } else if (from == 0x74 && to == 0x72 &&
+               (board->castling_rights & CASTLE_BLACK_QUEEN)) {
+        rook_from = 0x70;
+        rook_to = 0x73;
+        color = PIECE_BLACK;
+    } else {
+        return false;
+    }
+
+    int rank = SQ_RANK(from);
+    int file1 = SQ_FILE(from);
+    int file2 = SQ_FILE(rook_from);
+    int min_file = (file1 < file2) ? file1 : file2;
+    int max_file = (file1 > file2) ? file1 : file2;
+    // Check no pieces between king and rook.
+    for (int f = min_file + 1; f < max_file; f++) {
+        int idx = BOARD_INDEX(rank, f);
+        if (board->board[idx] != EMPTY)
+            return false;
+    }
+
+    // check that the piece in the rook spot is actually a rook
+    if (board->board[rook_from] != (color | ROOK)) {
+        return false;
+    }
+
+    if (make_move) {
+        board->board[rook_to] = board->board[rook_from];
+        board->board[rook_from] = EMPTY;
+        board->board[to] = board->board[from];
+        board->board[from] = EMPTY;
+        switch (color) {
+        case PIECE_WHITE:
+            board->castling_rights &= ~(CASTLE_WHITE_KING | CASTLE_WHITE_QUEEN);
+            break;
+        case PIECE_BLACK:
+            board->castling_rights &= ~(CASTLE_BLACK_KING | CASTLE_BLACK_QUEEN);
+        };
+    }
+    return true;
 }
 
 Board *board_from_fen(const char *fen_string) {

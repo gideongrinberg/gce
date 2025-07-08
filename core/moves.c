@@ -5,6 +5,7 @@
 const int rook_directions[4] = {-16, 16, -1, 1};
 const int bishop_directions[4] = {-15, -17, 15, 17};
 const int queen_directions[8] = {-16, 16, -1, 1, -15, -17, 15, 17};
+const int king_offsets[8] = {-16, 16, -1, 1, -15, -17, 15, 17};
 
 // Adds a pawn move to the array, handling promotions
 static void add_pawn_move(uint32_t *arr, int *moves, int from, int to) {
@@ -79,6 +80,29 @@ static void generate_sliding_moves(const Board *board, uint32_t *arr,
     }
 }
 
+static void generate_king_moves(const Board *board, uint32_t *arr, int *moves,
+                                const uint8_t color, const int idx) {
+    for (int j = 0; j < 8; j++) {
+        int target = idx + king_offsets[j];
+        if ((target & 0x88) == 0 &&
+            (GET_TYPE(board->board[target]) == EMPTY ||
+             GET_COLOR(board->board[target]) != color)) {
+            arr[(*moves)++] = ENCODE_MOVE(idx, target, PROMO_NONE);
+        }
+    }
+
+    if (SQ_RANK(idx) == 0 || SQ_RANK(idx) == 7) {
+        int offsets[2] = {-2, 2};
+        for (int j = 0; j < 2; j++) {
+            int target = idx + offsets[j];
+            uint32_t move = ENCODE_MOVE(idx, target, PROMO_NONE);
+            if ((target & 0x88) == 0 && castle(board, move, false)) {
+                arr[(*moves)++] = move;
+            }
+        }
+    }
+}
+
 int get_legal_moves(Board *board, uint32_t *arr) {
     int moves = 0;
     uint8_t color = board->moves % 2 == 0 ? PIECE_WHITE : PIECE_BLACK;
@@ -107,6 +131,9 @@ int get_legal_moves(Board *board, uint32_t *arr) {
             case QUEEN:
                 generate_sliding_moves(board, arr, &moves, color, idx,
                                        queen_directions, 8);
+                break;
+            case KING:
+                generate_king_moves(board, arr, &moves, color, idx);
                 break;
             }
         }
