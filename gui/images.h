@@ -27,10 +27,6 @@ extern unsigned int wknight_png_len;
 extern unsigned char bknight_png[];
 extern unsigned int bknight_png_len;
 
-// selected.png
-extern unsigned char selected_png[];
-extern unsigned int selected_png_len;
-
 // wbishop.png
 extern unsigned char wbishop_png[];
 extern unsigned int wbishop_png_len;
@@ -42,10 +38,6 @@ extern unsigned int bbishop_png_len;
 // wking.png
 extern unsigned char wking_png[];
 extern unsigned int wking_png_len;
-
-// board.png
-extern unsigned char board_png[];
-extern unsigned int board_png_len;
 
 // bking.png
 extern unsigned char bking_png[];
