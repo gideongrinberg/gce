@@ -38,3 +38,7 @@ if (APPLE)
     target_link_libraries(gce-gui "-framework Cocoa")
     target_link_libraries(gce-gui "-framework OpenGL")
 endif ()
+
+add_executable(gce-perft perft/
+        perft/main.c)
+target_link_libraries(gce-perft gce-core)

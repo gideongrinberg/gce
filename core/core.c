@@ -213,3 +213,13 @@ Board *copy_board(const Board *original) {
     memcpy(copy, original, sizeof(Board));
     return copy;
 }
+char *move_to_string(uint8_t move) {
+    int from = MOVE_FROM(move), to = MOVE_TO(move);
+    int from_file = SQ_FILE(from), from_rank = SQ_RANK(from),
+        to_file = SQ_FILE(to), to_rank = SQ_RANK(to);
+    char from_char = 'a' + from_file, to_char = 'a' + to_file;
+
+    char *ret = malloc(5);
+    sprintf(ret, "%c%d%c%d", from_char, from_rank + 1, to_char, to_rank + 1);
+    return ret;
+}
