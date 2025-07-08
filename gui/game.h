@@ -4,8 +4,6 @@
 #include <stdbool.h>
 
 #define BOARD_SIZE 8
-#define BEIGE (Color){245, 245, 220, 255}
-#define DARKBROWN (Color){139, 69, 19, 255}
 #define SELECTED_COLOR (Color){72, 118, 255, 180}  // Light blue
 #define POSSIBLE_COLOR (Color){255, 255, 102, 160} // Yellow
 

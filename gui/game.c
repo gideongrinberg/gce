@@ -31,7 +31,8 @@ void game_update(Game *game) {
                 GET_COLOR(selected_piece) == color) {
                 game->selected_square = (Square){rank, file};
 
-                // update potential moves
+                // update potential moves by storing all possible moves
+                // from the selected square in a bitboard
                 uint32_t moves[256];
                 int num_moves = get_legal_moves(game->board, moves);
                 game->possible_squares = 0;
