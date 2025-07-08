@@ -2,6 +2,10 @@
 
 #include <stdbool.h>
 
+const int rook_directions[4] = {-16, 16, -1, 1};
+const int bishop_directions[4] = {-15, -17, 15, 17};
+const int queen_directions[8] = {-16, 16, -1, 1, -15, -17, 15, 17};
+
 // Adds a pawn move to the array, handling promotions
 static void add_pawn_move(uint32_t *arr, int *moves, int from, int to) {
     if (SQ_RANK(to) == 0 || SQ_RANK(to) == 7) {
@@ -41,8 +45,8 @@ static void generate_pawn_moves(const Board *board, uint32_t *arr, int *moves,
     }
 }
 
-void generate_knight_moves(const Board *board, uint32_t *arr, int *moves,
-                           const uint8_t color, const int idx) {
+static void generate_knight_moves(const Board *board, uint32_t *arr, int *moves,
+                                  const uint8_t color, const int idx) {
     static const int offsets[8] = {33, 18, -14, -31, -33, -18, 14, 31};
     for (int j = 0; j < 8; j++) {
         int target = idx + offsets[j];
@@ -50,6 +54,27 @@ void generate_knight_moves(const Board *board, uint32_t *arr, int *moves,
             (board->board[target] == EMPTY ||
              GET_COLOR(board->board[target]) != color)) {
             arr[(*moves)++] = ENCODE_MOVE(idx, target, PROMO_NONE);
+        }
+    }
+}
+
+static void generate_sliding_moves(const Board *board, uint32_t *arr,
+                                   int *moves, const uint8_t color,
+                                   const int idx, const int directions[],
+                                   const int num_directions) {
+    for (int j = 0; j < num_directions; j++) {
+        const int direction = directions[j];
+        int target = idx + direction;
+        while ((target & 0x88) == 0 &&
+               (GET_TYPE(board->board[target]) == EMPTY ||
+                GET_COLOR(board->board[target]) != color)) {
+            arr[(*moves)++] = ENCODE_MOVE(idx, target, PROMO_NONE);
+            // Stop when blocked by a piece
+            if (GET_TYPE(board->board[target]) != EMPTY &&
+                GET_COLOR(board->board[target]) != color) {
+                break;
+            }
+            target += direction;
         }
     }
 }
@@ -70,6 +95,18 @@ int get_legal_moves(Board *board, uint32_t *arr) {
 
             case KNIGHT:
                 generate_knight_moves(board, arr, &moves, color, idx);
+                break;
+            case BISHOP:
+                generate_sliding_moves(board, arr, &moves, color, idx,
+                                       bishop_directions, 4);
+                break;
+            case ROOK:
+                generate_sliding_moves(board, arr, &moves, color, idx,
+                                       rook_directions, 4);
+                break;
+            case QUEEN:
+                generate_sliding_moves(board, arr, &moves, color, idx,
+                                       queen_directions, 8);
                 break;
             }
         }
