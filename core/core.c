@@ -35,19 +35,21 @@ void execute_move(Board *board, uint32_t move) {
     board->moves++;
 }
 
-Board *board_from_fen(const char *fen) {
+Board *board_from_fen(const char *fen_string) {
     Board *board = malloc(sizeof(Board));
     if (!board) {
         fprintf(stderr, "Failed to allocate memory for board from fen: %s\n",
-                fen);
+                fen_string);
         return NULL;
     }
 
     memset(board->board, 0, sizeof(board->board));
-
-    int i = 0;
+    char buffer[256];
+    strncpy(buffer, fen_string, 256);
+    buffer[sizeof(buffer) - 1] = '\0';
+    char *fen = strtok(buffer, " ");
     int rank = 7, file = 0;
-    while (fen[i] != ' ') {
+    for (int i = 0; fen[i] != '\0'; i++) {
         if (isdigit(fen[i])) {
             int digit = fen[i] - '0';
             file += digit;
@@ -78,6 +80,8 @@ Board *board_from_fen(const char *fen) {
             case 'K':
                 piece = KING;
                 break;
+            default: // this should never happen but clang-tidy complains
+                piece = EMPTY;
             }
 
             board->board[BOARD_INDEX(rank, file)] = color | piece;
@@ -86,25 +90,18 @@ Board *board_from_fen(const char *fen) {
             rank--;
             file = 0;
         }
-        i++;
     }
 
-    while (fen[i] == ' ') {
-        i++;
-    }
-
-    if (fen[i] == 'w') {
+    fen = strtok(NULL, " ");
+    if (fen[0] == 'w') {
         board->moves = 0;
     } else {
         board->moves = 1;
     }
 
-    while (fen[i] == ' ') {
-        i++;
-    }
-
+    fen = strtok(NULL, " ");
     uint8_t castling_rights = 0;
-    while (fen[i] != ' ') {
+    for (int i = 0; fen[i] != '\0'; i++) {
         switch (fen[i]) {
         case 'K':
             castling_rights |= CASTLE_WHITE_KING;
@@ -121,7 +118,6 @@ Board *board_from_fen(const char *fen) {
         case '-':
             break;
         }
-        i++;
     }
 
     board->castling_rights = castling_rights;

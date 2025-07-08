@@ -61,5 +61,5 @@ int get_legal_moves(Board *board, uint32_t *arr);
  * Does not support en-passant or move counters,
  * but includes castling rights and next-to-move.
  */
-Board *board_from_fen(const char *fen);
+Board *board_from_fen(const char *fen_string);
 #endif // CORE_H
