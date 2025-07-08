@@ -23,12 +23,16 @@ add_library(gce-core STATIC # Shared code
 
 add_executable(gce-gui gui/ # GUI code
         gui/main.c
+        gui/images.c
+        gui/images.h
         gui/game.c
-        gui/game.h)
+        gui/game.h
+        gui/textures.h
+        gui/textures.c)
 
 target_link_libraries(gce-gui gce-core raylib)
 if (APPLE)
     target_link_libraries(gce-gui "-framework IOKit")
     target_link_libraries(gce-gui "-framework Cocoa")
     target_link_libraries(gce-gui "-framework OpenGL")
-endif()
+endif ()

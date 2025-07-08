@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "raylib.h"
+#include "textures.h"
 
 Game *new_game() {
     Game *game = malloc(sizeof(Game));
@@ -97,8 +98,13 @@ void draw_board(Game *game) {
             uint8_t piece = board->board[BOARD_INDEX(rank, file)];
             if (GET_TYPE(piece) != EMPTY) {
                 // Draw the piece
-                DrawText(TextFormat("%d", GET_TYPE(piece)), x + 5, y + 5, 20,
-                         (GET_COLOR(piece) == PIECE_WHITE) ? WHITE : BLACK);
+                Texture2D tex = get_piece_texture(piece);
+                float scale = (float)tileSize / tex.width;
+                float heightScaled = tex.height * scale;
+                float yOffset = (tileSize - heightScaled) / 2.0f;
+
+                DrawTextureEx(tex, (Vector2){x, y + yOffset}, 0.0f, scale,
+                              WHITE);
             }
         }
     }
