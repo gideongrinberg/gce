@@ -5,6 +5,38 @@
 #include <string.h>
 #include <stdlib.h>
 
+
+void execute_move(Board *board, uint32_t move) {
+    int from = MOVE_FROM(move);
+    int to = MOVE_TO(move);
+    int promo = MOVE_PROMO(move);
+
+    uint8_t piece = board->board[from];
+    if (promo != PROMO_NONE) {
+        uint8_t piece_type;
+        switch (promo) {
+            case PROMO_N:
+                piece_type = KNIGHT;
+                break;
+            case PROMO_B:
+                piece_type = BISHOP;
+                break;
+            case PROMO_R:
+                piece_type = ROOK;
+                break;
+            case PROMO_Q:
+                piece_type = QUEEN;
+                break;
+        }
+
+        piece = piece_type | GET_COLOR(piece);
+    }
+
+    board->board[from] = EMPTY;
+    board->board[to] = piece;
+    board->moves ++;
+}
+
 /*
  * This macro checks whether a pawn is moving to the last rank
  * and handles promotion logic accordingly. It is only used
@@ -36,21 +68,22 @@ int get_legal_moves(Board *board, uint32_t *arr) {
                     if ((target & 0x88) == 0 && board->board[target] == EMPTY) {
                         ADD_PAWN_MOVE(idx, target);
                         target = idx + (sign * 32);
-                        bool can_double_push = (color == PIECE_WHITE && SQ_RANK(idx) == 1) || (color == PIECE_BLACK && SQ_RANK(idx) == 6);
+                        bool can_double_push = (color == PIECE_WHITE && SQ_RANK(idx) == 1) || (
+                                                   color == PIECE_BLACK && SQ_RANK(idx) == 6);
                         if (can_double_push && (target & 0x88) == 0 && board->board[target] == EMPTY) {
                             arr[moves++] = ENCODE_MOVE(idx, target, PROMO_NONE);
                         }
                     }
 
                     // handle left and right captures
-                    int capture_offsets[2] = { sign * 15, sign * 17 };
+                    int capture_offsets[2] = {sign * 15, sign * 17};
                     for (int j = 0; j < 2; j++) {
                         int capture = idx + capture_offsets[j];
                         if ((capture & 0x88) == 0 &&
                             GET_TYPE(board->board[capture]) != EMPTY &&
                             GET_COLOR(board->board[capture]) != color) {
                             ADD_PAWN_MOVE(idx, capture);
-                            }
+                        }
                     }
             }
         }

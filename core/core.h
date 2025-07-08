@@ -48,6 +48,8 @@ typedef struct {
     int moves;
 } Board;
 
+void execute_move(Board* board, uint32_t move);
+
 /*
  * Fills `arr` with all legal moves, encoded as `uint32_t`.
  * `arr` should be `uint32_t[256]`.

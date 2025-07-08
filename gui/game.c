@@ -6,7 +6,6 @@
 Game* new_game() {
     Game* game = malloc(sizeof(Game));
     game->board = board_from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-    // game->board = board_from_fen("rnbqkbnr/ppp1p1pp/8/3p1p2/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 0 1");
     game->selected_square = (Square) {-1, -1};
 
     return game;
@@ -21,7 +20,9 @@ void game_update(Game* game) {
     int rank, file;
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
         if (get_mouse_square(GetMouseX(), GetMouseY(), GetScreenWidth(), GetScreenHeight(), &rank, &file)) {
-            if (GET_TYPE(game->board->board[BOARD_INDEX(rank, file)]) != EMPTY) {
+            uint8_t selected_piece = game->board->board[BOARD_INDEX(rank, file)];
+            uint8_t color = game->board->moves % 2 == 0 ? PIECE_WHITE : PIECE_BLACK;
+            if (GET_TYPE(selected_piece) != EMPTY && GET_COLOR(selected_piece) == color) {
                 game->selected_square = (Square) {rank, file};
 
                 // update potential moves
@@ -37,6 +38,12 @@ void game_update(Game* game) {
                         }
                     }
                 }
+            } else if (game->selected_square.rank != -1 && game->selected_square.file != -1 && (game->possible_squares & 1ULL << (rank*8 + file))) {
+                // todo: handle promotions
+                uint32_t move = ENCODE_MOVE(BOARD_INDEX(game->selected_square.rank, game->selected_square.file), BOARD_INDEX(rank, file), PROMO_NONE);
+                execute_move(game->board, move);
+                game->selected_square = (Square) {-1, -1};
+                game->possible_squares = 0;
             }
         } else {
             game->selected_square = (Square) {-1, -1};
