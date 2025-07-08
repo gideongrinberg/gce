@@ -19,7 +19,9 @@ include_directories(core/)
 
 add_library(gce-core STATIC # Shared code
         core/core.h
-        core/core.c)
+        core/core.c
+        core/moves.c
+)
 
 add_executable(gce-gui gui/ # GUI code
         gui/main.c
