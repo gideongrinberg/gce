@@ -31,8 +31,8 @@ static void generate_pawn_moves(const Board *board, uint32_t *arr, int *moves,
                                (color == PIECE_BLACK && SQ_RANK(idx) == 6);
         if (can_double_push && (target & 0x88) == 0 &&
             board->board[target] == EMPTY) {
-            arr[(*moves)++] =
-                ENCODE_MOVE(idx, target, PROMO_NONE); // can't promote
+            // can't promote so no need to use add_pawn_move
+            arr[(*moves)++] = ENCODE_MOVE(idx, target, PROMO_NONE);
         }
     }
 
@@ -40,8 +40,10 @@ static void generate_pawn_moves(const Board *board, uint32_t *arr, int *moves,
     int capture_offsets[2] = {sign * 15, sign * 17};
     for (int j = 0; j < 2; j++) {
         int capture = idx + capture_offsets[j];
-        if ((capture & 0x88) == 0 && GET_TYPE(board->board[capture]) != EMPTY &&
-            GET_COLOR(board->board[capture]) != color) {
+        if ((capture & 0x88) == 0 &&
+            ((GET_TYPE(board->board[capture]) != EMPTY &&
+              GET_COLOR(board->board[capture]) != color) ||
+             capture == board->en_passant)) {
             add_pawn_move(arr, moves, idx, capture);
         }
     }

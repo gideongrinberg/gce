@@ -15,8 +15,8 @@ typedef struct {
 typedef struct {
     Board *board;
     Square selected_square;
-    uint64_t
-        possible_squares; // bitboard of squares the current piece can move to
+    // bitboard of squares the current piece can move to
+    uint64_t possible_squares;
 } Game;
 
 Game *new_game();

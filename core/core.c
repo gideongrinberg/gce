@@ -16,8 +16,9 @@ void execute_move(Board *board, uint32_t move) {
             return;
         }
     }
+
+    uint8_t piece_type = GET_TYPE(piece);
     if (promo != PROMO_NONE) {
-        uint8_t piece_type;
         switch (promo) {
         case PROMO_N:
             piece_type = KNIGHT;
@@ -38,7 +39,20 @@ void execute_move(Board *board, uint32_t move) {
 
     board->board[from] = EMPTY;
     board->board[to] = piece;
+    int sign = (board->moves % 2) == 0 ? 1 : -1;
+
+    // check for en-passant capture
+    if (to == board->en_passant) {
+        board->board[to - (sign * 16)] = EMPTY;
+    }
+
+    // update en-passant square
     board->moves++;
+    if (piece_type == PAWN && (to - from) == (sign * 32)) {
+        board->en_passant = from + sign * 16;
+    } else {
+        board->en_passant = -1;
+    }
 }
 
 bool castle(Board *board, uint32_t move, bool make_move) {

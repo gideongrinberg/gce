@@ -9,7 +9,8 @@
 
 Game *new_game() {
     Game *game = malloc(sizeof(Game));
-    game->board = board_from_fen("r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1");
+    game->board = board_from_fen(
+        "rbnqknbr/pppppppp/8/8/8/8/PPPPPPPP/RBNQKNBR w KQkq - 0 1");
     game->selected_square = (Square){-1, -1};
 
     return game;
@@ -138,7 +139,10 @@ void draw_debug_text(Game *game) {
 
     castlingRights[i] = '\0';
 
-    const char *debugLines[] = {toMove, numMoves, castlingRights};
+    char enPassant[27];
+    sprintf(enPassant, "EP target: %d", game->board->en_passant);
+
+    const char *debugLines[] = {toMove, numMoves, castlingRights, enPassant};
     int fontSize = 20;
     int lineSpacing = 4;
     int padding = 10;
