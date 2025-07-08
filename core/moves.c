@@ -1,6 +1,7 @@
 #include "core.h"
 
 #include <stdbool.h>
+#include <stdlib.h>
 
 const int rook_directions[4] = {-16, 16, -1, 1};
 const int bishop_directions[4] = {-15, -17, 15, 17};
@@ -103,7 +104,12 @@ static void generate_king_moves(const Board *board, uint32_t *arr, int *moves,
     }
 }
 
-int get_legal_moves(Board *board, uint32_t *arr) {
+/*
+ * Gets all pseudolegal moves. In other words,
+ * generates a list of all potentially legal moves without checking if they
+ * leave the king in check.
+ */
+int get_pseudolegal_moves(Board *board, uint32_t *arr) {
     int moves = 0;
     uint8_t color = board->moves % 2 == 0 ? PIECE_WHITE : PIECE_BLACK;
     for (int rank = 0; rank < 8; rank++) {
@@ -138,5 +144,69 @@ int get_legal_moves(Board *board, uint32_t *arr) {
             }
         }
     }
+    return moves;
+}
+
+bool is_square_attacked(Board *board, int sq) {
+    uint32_t moves[256];
+    // increment moves
+    int num_moves = get_pseudolegal_moves(board, moves);
+    for (int i = 0; i < num_moves; i++) {
+        uint32_t move = moves[i];
+        if (MOVE_TO(move) == sq) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void find_kings(const Board *board, int *white_king, int *black_king) {
+    *white_king = -1;
+    *black_king = -1;
+
+    for (int i = 0; i < 128; i++) {
+        if (i & 0x88)
+            continue;
+
+        uint8_t piece = board->board[i];
+        if (GET_COLOR(piece) == PIECE_WHITE && GET_TYPE(piece) == KING)
+            *white_king = i;
+        else if (GET_COLOR(piece) == PIECE_BLACK && GET_TYPE(piece) == KING)
+            *black_king = i;
+
+        if (*white_king != -1 && *black_king != -1)
+            return;
+    }
+}
+
+int get_legal_moves(Board *board, uint32_t *arr) {
+    int moves = 0;
+    uint32_t potential_moves[256];
+    int num_potential_moves = get_pseudolegal_moves(board, potential_moves);
+    // execute each move and check if king is attacked
+    for (int i = 0; i < num_potential_moves; i++) {
+        uint32_t move = potential_moves[i];
+
+        Board *test_board = copy_board(board);
+        execute_move(test_board, move);
+
+        int white_king, black_king;
+        find_kings(test_board, &white_king, &black_king);
+
+        int king_sq;
+        if (board->moves % 2 == 0) {
+            king_sq = white_king;
+        } else {
+            king_sq = black_king;
+        }
+
+        if (!is_square_attacked(test_board, king_sq)) {
+            arr[moves++] = move;
+        }
+
+        free(test_board);
+    }
+
     return moves;
 }

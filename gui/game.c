@@ -9,8 +9,7 @@
 
 Game *new_game() {
     Game *game = malloc(sizeof(Game));
-    game->board = board_from_fen(
-        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    game->board = board_from_fen("r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1");
     game->selected_square = (Square){-1, -1};
 
     return game;

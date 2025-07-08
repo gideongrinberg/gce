@@ -188,5 +188,14 @@ Board *board_from_fen(const char *fen_string) {
     }
 
     board->castling_rights = castling_rights;
+
+    // todo: implement en passant
+    board->en_passant = -1;
     return board;
+}
+
+Board *copy_board(const Board *original) {
+    Board *copy = malloc(sizeof(Board));
+    memcpy(copy, original, sizeof(Board));
+    return copy;
 }

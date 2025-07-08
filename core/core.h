@@ -46,6 +46,7 @@
 typedef struct {
     uint8_t board[128];
     uint8_t castling_rights;
+    int en_passant;
     int moves;
 } Board;
 
@@ -68,4 +69,5 @@ int get_legal_moves(Board *board, uint32_t *arr);
  * but includes castling rights and next-to-move.
  */
 Board *board_from_fen(const char *fen_string);
+Board *copy_board(const Board *original);
 #endif // CORE_H
