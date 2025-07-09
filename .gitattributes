@@ -1,2 +1,2 @@
-gui/assets.h linguist-generated
-gui/assets.c linguist-generated
+gui/assets.h linguist-vendored=true
+gui/assets.c linguist-vendored=true
