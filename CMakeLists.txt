@@ -35,7 +35,8 @@ add_library(gce-core STATIC # Shared code
         core/moves.c
 )
 
-add_executable(gce-gui gui/ # GUI code
+# GUI code
+add_executable(gce-gui gui/
         gui/main.c
         gui/images.c
         gui/images.h
@@ -44,6 +45,18 @@ add_executable(gce-gui gui/ # GUI code
         gui/textures.h
         gui/textures.c)
 
+# Generate headers to embed assets
+add_custom_command(
+        OUTPUT ${CMAKE_SOURCE_DIR}/gui/images.h ${CMAKE_SOURCE_DIR}/gui/images.c
+        COMMAND python3 ${CMAKE_SOURCE_DIR}/gui/assets/build_assets.py
+        DEPENDS ${CMAKE_SOURCE_DIR}/gui/assets/build_assets.py
+)
+
+add_custom_target(gui_assets
+        DEPENDS ${CMAKE_SOURCE_DIR}/gui/images.h ${CMAKE_SOURCE_DIR}/gui/images.c
+)
+
+add_dependencies(gce-gui gui_assets)
 target_link_libraries(gce-gui gce-core raylib)
 if (APPLE) # raylib stuff for mac
     target_link_libraries(gce-gui "-framework IOKit")
