@@ -61,7 +61,9 @@ void game_update(Game *game) {
                     ENCODE_MOVE(BOARD_INDEX(game->selected_square.rank,
                                             game->selected_square.file),
                                 BOARD_INDEX(rank, file), PROMO_NONE);
-                printf("%s ", move_to_string(move));
+                char *move_str = move_to_string(move);
+                printf("%s ", move_str);
+                free(move_str);
                 fflush(stdout);
                 execute_move(game->board, move);
                 game->selected_square = (Square){-1, -1};
