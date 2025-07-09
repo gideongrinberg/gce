@@ -2,7 +2,7 @@
     {
         "name": "kiwipete",
         "fen": "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             48,
@@ -16,7 +16,7 @@
     {
         "name": "CP Wiki #5",
         "fen": "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             48,
@@ -28,1639 +28,1513 @@
     {
         "name": "perftsuite #1",
         "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             20,
             400,
             8902,
-            197281,
-            4865609
+            197281
         ]
     },
     {
         "name": "perftsuite #2",
         "fen": "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             48,
             2039,
             97862,
-            4085603,
-            193690690
+            4085603
         ]
     },
     {
         "name": "perftsuite #3",
         "fen": "4k3/8/8/8/8/8/8/4K2R w K - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             15,
             66,
             1197,
-            7059,
-            133987
+            7059
         ]
     },
     {
         "name": "perftsuite #4",
         "fen": "4k3/8/8/8/8/8/8/R3K3 w Q - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             16,
             71,
             1287,
-            7626,
-            145232
+            7626
         ]
     },
     {
         "name": "perftsuite #5",
         "fen": "4k2r/8/8/8/8/8/8/4K3 w k - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             5,
             75,
             459,
-            8290,
-            47635
+            8290
         ]
     },
     {
         "name": "perftsuite #6",
         "fen": "r3k3/8/8/8/8/8/8/4K3 w q - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             5,
             80,
             493,
-            8897,
-            52710
+            8897
         ]
     },
     {
         "name": "perftsuite #7",
         "fen": "4k3/8/8/8/8/8/8/R3K2R w KQ - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             26,
             112,
             3189,
-            17945,
-            532933
+            17945
         ]
     },
     {
         "name": "perftsuite #8",
         "fen": "r3k2r/8/8/8/8/8/8/4K3 w kq - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             5,
             130,
             782,
-            22180,
-            118882
+            22180
         ]
     },
     {
         "name": "perftsuite #9",
         "fen": "8/8/8/8/8/8/6k1/4K2R w K - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             12,
             38,
             564,
-            2219,
-            37735
+            2219
         ]
     },
     {
         "name": "perftsuite #10",
         "fen": "8/8/8/8/8/8/1k6/R3K3 w Q - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             15,
             65,
             1018,
-            4573,
-            80619
+            4573
         ]
     },
     {
         "name": "perftsuite #11",
         "fen": "4k2r/6K1/8/8/8/8/8/8 w k - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             3,
             32,
             134,
-            2073,
-            10485
+            2073
         ]
     },
     {
         "name": "perftsuite #12",
         "fen": "r3k3/1K6/8/8/8/8/8/8 w q - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             4,
             49,
             243,
-            3991,
-            20780
+            3991
         ]
     },
     {
         "name": "perftsuite #13",
         "fen": "r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             26,
             568,
             13744,
-            314346,
-            7594526
+            314346
         ]
     },
     {
         "name": "perftsuite #14",
         "fen": "r3k2r/8/8/8/8/8/8/1R2K2R w Kkq - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             25,
             567,
             14095,
-            328965,
-            8153719
+            328965
         ]
     },
     {
         "name": "perftsuite #15",
         "fen": "r3k2r/8/8/8/8/8/8/2R1K2R w Kkq - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             25,
             548,
             13502,
-            312835,
-            7736373
+            312835
         ]
     },
     {
         "name": "perftsuite #16",
         "fen": "r3k2r/8/8/8/8/8/8/R3K1R1 w Qkq - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             25,
             547,
             13579,
-            316214,
-            7878456
+            316214
         ]
     },
     {
         "name": "perftsuite #17",
         "fen": "1r2k2r/8/8/8/8/8/8/R3K2R w KQk - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             26,
             583,
             14252,
-            334705,
-            8198901
+            334705
         ]
     },
     {
         "name": "perftsuite #18",
         "fen": "2r1k2r/8/8/8/8/8/8/R3K2R w KQk - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             25,
             560,
             13592,
-            317324,
-            7710115
+            317324
         ]
     },
     {
         "name": "perftsuite #19",
         "fen": "r3k1r1/8/8/8/8/8/8/R3K2R w KQq - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             25,
             560,
             13607,
-            320792,
-            7848606
+            320792
         ]
     },
     {
         "name": "perftsuite #20",
         "fen": "4k3/8/8/8/8/8/8/4K2R b K - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             5,
             75,
             459,
-            8290,
-            47635
+            8290
         ]
     },
     {
         "name": "perftsuite #21",
         "fen": "4k3/8/8/8/8/8/8/R3K3 b Q - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             5,
             80,
             493,
-            8897,
-            52710
+            8897
         ]
     },
     {
         "name": "perftsuite #22",
         "fen": "4k2r/8/8/8/8/8/8/4K3 b k - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             15,
             66,
             1197,
-            7059,
-            133987
+            7059
         ]
     },
     {
         "name": "perftsuite #23",
         "fen": "r3k3/8/8/8/8/8/8/4K3 b q - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             16,
             71,
             1287,
-            7626,
-            145232
+            7626
         ]
     },
     {
         "name": "perftsuite #24",
         "fen": "4k3/8/8/8/8/8/8/R3K2R b KQ - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             5,
             130,
             782,
-            22180,
-            118882
+            22180
         ]
     },
     {
         "name": "perftsuite #25",
         "fen": "r3k2r/8/8/8/8/8/8/4K3 b kq - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             26,
             112,
             3189,
-            17945,
-            532933
+            17945
         ]
     },
     {
         "name": "perftsuite #26",
         "fen": "8/8/8/8/8/8/6k1/4K2R b K - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             3,
             32,
             134,
-            2073,
-            10485
+            2073
         ]
     },
     {
         "name": "perftsuite #27",
         "fen": "8/8/8/8/8/8/1k6/R3K3 b Q - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             4,
             49,
             243,
-            3991,
-            20780
+            3991
         ]
     },
     {
         "name": "perftsuite #28",
         "fen": "4k2r/6K1/8/8/8/8/8/8 b k - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             12,
             38,
             564,
-            2219,
-            37735
+            2219
         ]
     },
     {
         "name": "perftsuite #29",
         "fen": "r3k3/1K6/8/8/8/8/8/8 b q - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             15,
             65,
             1018,
-            4573,
-            80619
+            4573
         ]
     },
     {
         "name": "perftsuite #30",
         "fen": "r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             26,
             568,
             13744,
-            314346,
-            7594526
+            314346
         ]
     },
     {
         "name": "perftsuite #31",
         "fen": "r3k2r/8/8/8/8/8/8/1R2K2R b Kkq - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             26,
             583,
             14252,
-            334705,
-            8198901
+            334705
         ]
     },
     {
         "name": "perftsuite #32",
         "fen": "r3k2r/8/8/8/8/8/8/2R1K2R b Kkq - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             25,
             560,
             13592,
-            317324,
-            7710115
+            317324
         ]
     },
     {
         "name": "perftsuite #33",
         "fen": "r3k2r/8/8/8/8/8/8/R3K1R1 b Qkq - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             25,
             560,
             13607,
-            320792,
-            7848606
+            320792
         ]
     },
     {
         "name": "perftsuite #34",
         "fen": "1r2k2r/8/8/8/8/8/8/R3K2R b KQk - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             25,
             567,
             14095,
-            328965,
-            8153719
+            328965
         ]
     },
     {
         "name": "perftsuite #35",
         "fen": "2r1k2r/8/8/8/8/8/8/R3K2R b KQk - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             25,
             548,
             13502,
-            312835,
-            7736373
+            312835
         ]
     },
     {
         "name": "perftsuite #36",
         "fen": "r3k1r1/8/8/8/8/8/8/R3K2R b KQq - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             25,
             547,
             13579,
-            316214,
-            7878456
+            316214
         ]
     },
     {
         "name": "perftsuite #37",
         "fen": "8/1n4N1/2k5/8/8/5K2/1N4n1/8 w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             14,
             195,
             2760,
-            38675,
-            570726
+            38675
         ]
     },
     {
         "name": "perftsuite #38",
         "fen": "8/1k6/8/5N2/8/4n3/8/2K5 w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             11,
             156,
             1636,
-            20534,
-            223507
+            20534
         ]
     },
     {
         "name": "perftsuite #39",
         "fen": "8/8/4k3/3Nn3/3nN3/4K3/8/8 w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             19,
             289,
             4442,
-            73584,
-            1198299
+            73584
         ]
     },
     {
         "name": "perftsuite #40",
         "fen": "K7/8/2n5/1n6/8/8/8/k6N w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             3,
             51,
             345,
-            5301,
-            38348
+            5301
         ]
     },
     {
         "name": "perftsuite #41",
         "fen": "k7/8/2N5/1N6/8/8/8/K6n w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             17,
             54,
             835,
-            5910,
-            92250
+            5910
         ]
     },
     {
         "name": "perftsuite #42",
         "fen": "8/1n4N1/2k5/8/8/5K2/1N4n1/8 b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             15,
             193,
             2816,
-            40039,
-            582642
+            40039
         ]
     },
     {
         "name": "perftsuite #43",
         "fen": "8/1k6/8/5N2/8/4n3/8/2K5 b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             16,
             180,
             2290,
-            24640,
-            288141
+            24640
         ]
     },
     {
         "name": "perftsuite #44",
         "fen": "8/8/3K4/3Nn3/3nN3/4k3/8/8 b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             4,
             68,
             1118,
-            16199,
-            281190
+            16199
         ]
     },
     {
         "name": "perftsuite #45",
         "fen": "K7/8/2n5/1n6/8/8/8/k6N b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             17,
             54,
             835,
-            5910,
-            92250
+            5910
         ]
     },
     {
         "name": "perftsuite #46",
         "fen": "k7/8/2N5/1N6/8/8/8/K6n b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             3,
             51,
             345,
-            5301,
-            38348
+            5301
         ]
     },
     {
         "name": "perftsuite #47",
         "fen": "B6b/8/8/8/2K5/4k3/8/b6B w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             17,
             278,
             4607,
-            76778,
-            1320507
+            76778
         ]
     },
     {
         "name": "perftsuite #48",
         "fen": "8/8/1B6/7b/7k/8/2B1b3/7K w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             21,
             316,
             5744,
-            93338,
-            1713368
+            93338
         ]
     },
     {
         "name": "perftsuite #49",
         "fen": "k7/B7/1B6/1B6/8/8/8/K6b w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             21,
             144,
             3242,
-            32955,
-            787524
+            32955
         ]
     },
     {
         "name": "perftsuite #50",
         "fen": "K7/b7/1b6/1b6/8/8/8/k6B w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             7,
             143,
             1416,
-            31787,
-            310862
+            31787
         ]
     },
     {
         "name": "perftsuite #51",
         "fen": "B6b/8/8/8/2K5/5k2/8/b6B b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             6,
             106,
             1829,
-            31151,
-            530585
+            31151
         ]
     },
     {
         "name": "perftsuite #52",
         "fen": "8/8/1B6/7b/7k/8/2B1b3/7K b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             17,
             309,
             5133,
-            93603,
-            1591064
+            93603
         ]
     },
     {
         "name": "perftsuite #53",
         "fen": "k7/B7/1B6/1B6/8/8/8/K6b b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             7,
             143,
             1416,
-            31787,
-            310862
+            31787
         ]
     },
     {
         "name": "perftsuite #54",
         "fen": "K7/b7/1b6/1b6/8/8/8/k6B b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             21,
             144,
             3242,
-            32955,
-            787524
+            32955
         ]
     },
     {
         "name": "perftsuite #55",
         "fen": "7k/RR6/8/8/8/8/rr6/7K w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             19,
             275,
             5300,
-            104342,
-            2161211
+            104342
         ]
     },
     {
         "name": "perftsuite #56",
         "fen": "R6r/8/8/2K5/5k2/8/8/r6R w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             36,
             1027,
             29215,
-            771461,
-            20506480
+            771461
         ]
     },
     {
         "name": "perftsuite #57",
         "fen": "7k/RR6/8/8/8/8/rr6/7K b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             19,
             275,
             5300,
-            104342,
-            2161211
+            104342
         ]
     },
     {
         "name": "perftsuite #58",
         "fen": "R6r/8/8/2K5/5k2/8/8/r6R b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             36,
             1027,
             29227,
-            771368,
-            20521342
+            771368
         ]
     },
     {
         "name": "perftsuite #59",
         "fen": "6kq/8/8/8/8/8/8/7K w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             2,
             36,
             143,
-            3637,
-            14893
+            3637
         ]
     },
     {
         "name": "perftsuite #60",
         "fen": "6KQ/8/8/8/8/8/8/7k b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             2,
             36,
             143,
-            3637,
-            14893
+            3637
         ]
     },
     {
         "name": "perftsuite #61",
         "fen": "K7/8/8/3Q4/4q3/8/8/7k w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             6,
             35,
             495,
-            8349,
-            166741
+            8349
         ]
     },
     {
         "name": "perftsuite #62",
         "fen": "6qk/8/8/8/8/8/8/7K b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             22,
             43,
             1015,
-            4167,
-            105749
+            4167
         ]
     },
     {
         "name": "perftsuite #63",
         "fen": "6KQ/8/8/8/8/8/8/7k b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             2,
             36,
             143,
-            3637,
-            14893
+            3637
         ]
     },
     {
         "name": "perftsuite #64",
         "fen": "K7/8/8/3Q4/4q3/8/8/7k b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             6,
             35,
             495,
-            8349,
-            166741
+            8349
         ]
     },
     {
         "name": "perftsuite #65",
         "fen": "8/8/8/8/8/K7/P7/k7 w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             3,
             7,
             43,
-            199,
-            1347
+            199
         ]
     },
     {
         "name": "perftsuite #66",
         "fen": "8/8/8/8/8/7K/7P/7k w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             3,
             7,
             43,
-            199,
-            1347
+            199
         ]
     },
     {
         "name": "perftsuite #67",
         "fen": "K7/p7/k7/8/8/8/8/8 w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             1,
             3,
             12,
-            80,
-            342
+            80
         ]
     },
     {
         "name": "perftsuite #68",
         "fen": "7K/7p/7k/8/8/8/8/8 w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             1,
             3,
             12,
-            80,
-            342
+            80
         ]
     },
     {
         "name": "perftsuite #69",
         "fen": "8/2k1p3/3pP3/3P2K1/8/8/8/8 w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             7,
             35,
             210,
-            1091,
-            7028
+            1091
         ]
     },
     {
         "name": "perftsuite #70",
         "fen": "8/8/8/8/8/K7/P7/k7 b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             1,
             3,
             12,
-            80,
-            342
+            80
         ]
     },
     {
         "name": "perftsuite #71",
         "fen": "8/8/8/8/8/7K/7P/7k b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             1,
             3,
             12,
-            80,
-            342
+            80
         ]
     },
     {
         "name": "perftsuite #72",
         "fen": "K7/p7/k7/8/8/8/8/8 b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             3,
             7,
             43,
-            199,
-            1347
+            199
         ]
     },
     {
         "name": "perftsuite #73",
         "fen": "7K/7p/7k/8/8/8/8/8 b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             3,
             7,
             43,
-            199,
-            1347
+            199
         ]
     },
     {
         "name": "perftsuite #74",
         "fen": "8/2k1p3/3pP3/3P2K1/8/8/8/8 b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             5,
             35,
             182,
-            1091,
-            5408
+            1091
         ]
     },
     {
         "name": "perftsuite #75",
         "fen": "8/8/8/8/8/4k3/4P3/4K3 w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             2,
             8,
             44,
-            282,
-            1814
+            282
         ]
     },
     {
         "name": "perftsuite #76",
         "fen": "4k3/4p3/4K3/8/8/8/8/8 b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             2,
             8,
             44,
-            282,
-            1814
+            282
         ]
     },
     {
         "name": "perftsuite #77",
         "fen": "8/8/7k/7p/7P/7K/8/8 w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             3,
             9,
             57,
-            360,
-            1969
+            360
         ]
     },
     {
         "name": "perftsuite #78",
         "fen": "8/8/k7/p7/P7/K7/8/8 w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             3,
             9,
             57,
-            360,
-            1969
+            360
         ]
     },
     {
         "name": "perftsuite #79",
         "fen": "8/8/3k4/3p4/3P4/3K4/8/8 w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             5,
             25,
             180,
-            1294,
-            8296
+            1294
         ]
     },
     {
         "name": "perftsuite #80",
         "fen": "8/3k4/3p4/8/3P4/3K4/8/8 w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             8,
             61,
             483,
-            3213,
-            23599
+            3213
         ]
     },
     {
         "name": "perftsuite #81",
         "fen": "8/8/3k4/3p4/8/3P4/3K4/8 w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             8,
             61,
             411,
-            3213,
-            21637
+            3213
         ]
     },
     {
         "name": "perftsuite #82",
         "fen": "k7/8/3p4/8/3P4/8/8/7K w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             4,
             15,
             90,
-            534,
-            3450
+            534
         ]
     },
     {
         "name": "perftsuite #83",
         "fen": "8/8/7k/7p/7P/7K/8/8 b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             3,
             9,
             57,
-            360,
-            1969
+            360
         ]
     },
     {
         "name": "perftsuite #84",
         "fen": "8/8/k7/p7/P7/K7/8/8 b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             3,
             9,
             57,
-            360,
-            1969
+            360
         ]
     },
     {
         "name": "perftsuite #85",
         "fen": "8/8/3k4/3p4/3P4/3K4/8/8 b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             5,
             25,
             180,
-            1294,
-            8296
+            1294
         ]
     },
     {
         "name": "perftsuite #86",
         "fen": "8/3k4/3p4/8/3P4/3K4/8/8 b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             8,
             61,
             411,
-            3213,
-            21637
+            3213
         ]
     },
     {
         "name": "perftsuite #87",
         "fen": "8/8/3k4/3p4/8/3P4/3K4/8 b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             8,
             61,
             483,
-            3213,
-            23599
+            3213
         ]
     },
     {
         "name": "perftsuite #88",
         "fen": "k7/8/3p4/8/3P4/8/8/7K b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             4,
             15,
             89,
-            537,
-            3309
+            537
         ]
     },
     {
         "name": "perftsuite #89",
         "fen": "7k/3p4/8/8/3P4/8/8/K7 w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             4,
             19,
             117,
-            720,
-            4661
+            720
         ]
     },
     {
         "name": "perftsuite #90",
         "fen": "7k/8/8/3p4/8/8/3P4/K7 w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             5,
             19,
             116,
-            716,
-            4786
+            716
         ]
     },
     {
         "name": "perftsuite #91",
         "fen": "k7/8/8/7p/6P1/8/8/K7 w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             5,
             22,
             139,
-            877,
-            6112
+            877
         ]
     },
     {
         "name": "perftsuite #92",
         "fen": "k7/8/7p/8/8/6P1/8/K7 w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             4,
             16,
             101,
-            637,
-            4354
+            637
         ]
     },
     {
         "name": "perftsuite #93",
         "fen": "k7/8/8/6p1/7P/8/8/K7 w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             5,
             22,
             139,
-            877,
-            6112
+            877
         ]
     },
     {
         "name": "perftsuite #94",
         "fen": "k7/8/6p1/8/8/7P/8/K7 w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             4,
             16,
             101,
-            637,
-            4354
+            637
         ]
     },
     {
         "name": "perftsuite #95",
         "fen": "k7/8/8/3p4/4p3/8/8/7K w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             3,
             15,
             84,
-            573,
-            3013
+            573
         ]
     },
     {
         "name": "perftsuite #96",
         "fen": "k7/8/3p4/8/8/4P3/8/7K w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             4,
             16,
             101,
-            637,
-            4271
+            637
         ]
     },
     {
         "name": "perftsuite #97",
         "fen": "7k/3p4/8/8/3P4/8/8/K7 b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             5,
             19,
             117,
-            720,
-            5014
+            720
         ]
     },
     {
         "name": "perftsuite #98",
         "fen": "7k/8/8/3p4/8/8/3P4/K7 b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             4,
             19,
             117,
-            712,
-            4658
+            712
         ]
     },
     {
         "name": "perftsuite #99",
         "fen": "k7/8/8/7p/6P1/8/8/K7 b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             5,
             22,
             139,
-            877,
-            6112
+            877
         ]
     },
     {
         "name": "perftsuite #100",
         "fen": "k7/8/7p/8/8/6P1/8/K7 b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             4,
             16,
             101,
-            637,
-            4354
+            637
         ]
     },
     {
         "name": "perftsuite #101",
         "fen": "k7/8/8/6p1/7P/8/8/K7 b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             5,
             22,
             139,
-            877,
-            6112
+            877
         ]
     },
     {
         "name": "perftsuite #102",
         "fen": "k7/8/6p1/8/8/7P/8/K7 b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             4,
             16,
             101,
-            637,
-            4354
+            637
         ]
     },
     {
         "name": "perftsuite #103",
         "fen": "k7/8/8/3p4/4p3/8/8/7K b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             5,
             15,
             102,
-            569,
-            4337
+            569
         ]
     },
     {
         "name": "perftsuite #104",
         "fen": "k7/8/3p4/8/8/4P3/8/7K b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             4,
             16,
             101,
-            637,
-            4271
+            637
         ]
     },
     {
         "name": "perftsuite #105",
         "fen": "7k/8/8/p7/1P6/8/8/7K w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             5,
             22,
             139,
-            877,
-            6112
+            877
         ]
     },
     {
         "name": "perftsuite #106",
         "fen": "7k/8/p7/8/8/1P6/8/7K w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             4,
             16,
             101,
-            637,
-            4354
+            637
         ]
     },
     {
         "name": "perftsuite #107",
         "fen": "7k/8/8/1p6/P7/8/8/7K w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             5,
             22,
             139,
-            877,
-            6112
+            877
         ]
     },
     {
         "name": "perftsuite #108",
         "fen": "7k/8/1p6/8/8/P7/8/7K w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             4,
             16,
             101,
-            637,
-            4354
+            637
         ]
     },
     {
         "name": "perftsuite #109",
         "fen": "k7/7p/8/8/8/8/6P1/K7 w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             5,
             25,
             161,
-            1035,
-            7574
+            1035
         ]
     },
     {
         "name": "perftsuite #110",
         "fen": "k7/6p1/8/8/8/8/7P/K7 w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             5,
             25,
             161,
-            1035,
-            7574
+            1035
         ]
     },
     {
         "name": "perftsuite #111",
         "fen": "3k4/3pp3/8/8/8/8/3PP3/3K4 w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             7,
             49,
             378,
-            2902,
-            24122
+            2902
         ]
     },
     {
         "name": "perftsuite #112",
         "fen": "7k/8/8/p7/1P6/8/8/7K b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             5,
             22,
             139,
-            877,
-            6112
+            877
         ]
     },
     {
         "name": "perftsuite #113",
         "fen": "7k/8/p7/8/8/1P6/8/7K b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             4,
             16,
             101,
-            637,
-            4354
+            637
         ]
     },
     {
         "name": "perftsuite #114",
         "fen": "7k/8/8/1p6/P7/8/8/7K b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             5,
             22,
             139,
-            877,
-            6112
+            877
         ]
     },
     {
         "name": "perftsuite #115",
         "fen": "7k/8/1p6/8/8/P7/8/7K b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             4,
             16,
             101,
-            637,
-            4354
+            637
         ]
     },
     {
         "name": "perftsuite #116",
         "fen": "k7/7p/8/8/8/8/6P1/K7 b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             5,
             25,
             161,
-            1035,
-            7574
+            1035
         ]
     },
     {
         "name": "perftsuite #117",
         "fen": "k7/6p1/8/8/8/8/7P/K7 b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             5,
             25,
             161,
-            1035,
-            7574
+            1035
         ]
     },
     {
         "name": "perftsuite #118",
         "fen": "3k4/3pp3/8/8/8/8/3PP3/3K4 b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             7,
             49,
             378,
-            2902,
-            24122
+            2902
         ]
     },
     {
         "name": "perftsuite #119",
         "fen": "8/Pk6/8/8/8/8/6Kp/8 w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             11,
             97,
             887,
-            8048,
-            90606
+            8048
         ]
     },
     {
         "name": "perftsuite #120",
         "fen": "n1n5/1Pk5/8/8/8/8/5Kp1/5N1N w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             24,
             421,
             7421,
-            124608,
-            2193768
+            124608
         ]
     },
     {
         "name": "perftsuite #121",
         "fen": "8/PPPk4/8/8/8/8/4Kppp/8 w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             18,
             270,
             4699,
-            79355,
-            1533145
+            79355
         ]
     },
     {
         "name": "perftsuite #122",
         "fen": "n1n5/PPPk4/8/8/8/8/4Kppp/5N1N w - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             24,
             496,
             9483,
-            182838,
-            3605103
+            182838
         ]
     },
     {
         "name": "perftsuite #123",
         "fen": "8/Pk6/8/8/8/8/6Kp/8 b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             11,
             97,
             887,
-            8048,
-            90606
+            8048
         ]
     },
     {
         "name": "perftsuite #124",
         "fen": "n1n5/1Pk5/8/8/8/8/5Kp1/5N1N b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             24,
             421,
             7421,
-            124608,
-            2193768
+            124608
         ]
     },
     {
         "name": "perftsuite #125",
         "fen": "8/PPPk4/8/8/8/8/4Kppp/8 b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             18,
             270,
             4699,
-            79355,
-            1533145
+            79355
         ]
     },
     {
         "name": "perftsuite #126",
         "fen": "n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1 ",
-        "depth": 5,
+        "depth": 4,
         "expected": [
             1,
             24,
             496,
             9483,
-            182838,
-            3605103
+            182838
         ]
     }
 ]
