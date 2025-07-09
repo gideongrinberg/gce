@@ -51,17 +51,6 @@ if (APPLE) # raylib stuff for mac
     target_link_libraries(gce-gui "-framework OpenGL")
 endif ()
 
-# perft testing
-add_custom_command(
-        OUTPUT perft_tests.h
-        COMMAND python3 ${CMAKE_SOURCE_DIR}/perft/generate_cases.py | xxd -n test_cases_json -i - > perft_tests.h
-        DEPENDS ${CMAKE_SOURCE_DIR}/perft/generate_cases.py ${CMAKE_SOURCE_DIR}/perft/perftsuite.epd
-        COMMENT "Embedding test cases"
-)
-
-add_custom_target(perft_test_cases DEPENDS ${CMAKE_BINARY_DIR}/perft_tests.h)
-add_executable(gce-perft perft/
-        perft/main.c ${CMAKE_BINARY_DIR}/perft_tests.h)
-add_dependencies(gce-perft perft_test_cases)
+add_executable(gce-perft perft/ # perft testing
+        perft/main.c)
 target_link_libraries(gce-perft gce-core cjson)
-target_include_directories(gce-perft PRIVATE ${CMAKE_BINARY_DIR})

@@ -1,6 +1,5 @@
 #include "cJSON.h"
 #include "core.h"
-#include "perft_tests.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,7 +13,7 @@
 #define SC(s) (s ? COLOR_GREEN : COLOR_RED)
 
 #define MAX_DEPTH 10
-#define MAX_TESTS 16
+#define MAX_TESTS 128
 
 double get_time(clockid_t clk_id) {
     struct timespec ts;
@@ -91,6 +90,75 @@ bool run_test(const char *name, const char *fen, int depth, int expected[]) {
     return success;
 }
 
+typedef struct {
+    char name[64];
+    char fen[128];
+    int depth;
+    int expected[MAX_DEPTH];
+} PerftTest;
+
+int load_perftsuite(const char *json, PerftTest *tests, int max_tests) {
+    cJSON *root = cJSON_Parse(json);
+    if (!root || !cJSON_IsArray(root)) {
+        fprintf(stderr, "Failed to parse JSON\n");
+        return -1;
+    }
+
+    int count = 0;
+    cJSON *item = NULL;
+    cJSON_ArrayForEach(item, root) {
+        if (count >= max_tests)
+            break;
+
+        PerftTest *test = &tests[count];
+
+        cJSON *name = cJSON_GetObjectItem(item, "name");
+        cJSON *fen = cJSON_GetObjectItem(item, "fen");
+        cJSON *depth = cJSON_GetObjectItem(item, "depth");
+        cJSON *expected = cJSON_GetObjectItem(item, "expected");
+
+        if (!cJSON_IsString(name) || !cJSON_IsString(fen) ||
+            !cJSON_IsNumber(depth) || !cJSON_IsArray(expected)) {
+            fprintf(stderr, "Invalid format in test #%d\n", count);
+            continue;
+        }
+
+        strncpy(test->name, name->valuestring, sizeof(test->name) - 1);
+        strncpy(test->fen, fen->valuestring, sizeof(test->fen) - 1);
+        test->depth = depth->valueint;
+
+        int i = 0;
+        cJSON *value;
+        cJSON_ArrayForEach(value, expected) {
+            if (!cJSON_IsNumber(value))
+                break;
+            if (i < MAX_DEPTH) {
+                test->expected[i++] = value->valueint;
+            }
+        }
+
+        count++;
+    }
+
+    cJSON_Delete(root);
+    return count;
+}
+
+int run_perftsuite(const char *json) {
+    bool success = true;
+    PerftTest tests[MAX_TESTS];
+    int num_tests = load_perftsuite(json, tests, MAX_TESTS);
+    for (int i = 0; i < num_tests; i++) {
+        success &= run_test(tests[i].name, tests[i].fen, tests[i].depth,
+                            tests[i].expected);
+        printf("\n==============================\n\n");
+    }
+
+    if (!success)
+        return -1;
+    return 0;
+}
+
 void run_perftree(const int argc, const char **argv) {
     int depth = atoi(argv[1]);
     const char *fen = argv[2];
@@ -129,74 +197,32 @@ void run_perftree(const int argc, const char **argv) {
     }
 
     int total = perft_divide(board, depth);
-    printf("\n%d\n", total);
-}
-
-typedef struct {
-    char name[64];
-    char fen[128];
-    int depth;
-    int expected[MAX_DEPTH];
-} Test;
-
-int load_tests(const char *json, Test *tests, int max_tests) {
-    cJSON *root = cJSON_Parse(json);
-    if (!root || !cJSON_IsArray(root)) {
-        fprintf(stderr, "Failed to parse JSON\n");
-        return -1;
-    }
-
-    int count = 0;
-    cJSON *item = NULL;
-    cJSON_ArrayForEach(item, root) {
-        if (count >= max_tests)
-            break;
-
-        Test *test = &tests[count];
-
-        cJSON *name = cJSON_GetObjectItem(item, "name");
-        cJSON *fen = cJSON_GetObjectItem(item, "fen");
-        cJSON *depth = cJSON_GetObjectItem(item, "depth");
-        cJSON *expected = cJSON_GetObjectItem(item, "expected");
-
-        if (!cJSON_IsString(name) || !cJSON_IsString(fen) ||
-            !cJSON_IsNumber(depth) || !cJSON_IsArray(expected)) {
-            fprintf(stderr, "Invalid format in test #%d\n", count);
-            continue;
-        }
-
-        strncpy(test->name, name->valuestring, sizeof(test->name) - 1);
-        strncpy(test->fen, fen->valuestring, sizeof(test->fen) - 1);
-        test->depth = depth->valueint;
-
-        int i = 0;
-        cJSON *value;
-        cJSON_ArrayForEach(value, expected) {
-            if (!cJSON_IsNumber(value))
-                break;
-            if (i < MAX_DEPTH) {
-                test->expected[i++] = value->valueint;
-            }
-        }
-
-        count++;
-    }
-
-    cJSON_Delete(root);
-    return count;
+    printf("\n");
+    printf("%d\n", total);
 }
 
 int main(const int argc, const char **argv) {
-    bool success = true;
-    Test tests[MAX_TESTS];
-    int num_tests = load_tests((const char *)test_cases_json, tests, MAX_TESTS);
-    for (int i = 0; i < num_tests; i++) {
-        success &= run_test(tests[i].name, tests[i].fen, tests[i].depth,
-                            tests[i].expected);
-        printf("\n==============================\n\n");
-    }
+    if (argc == 3 && strcmp(argv[1], "--suite") == 0) {
+        char *file = argv[2];
+        FILE *f = fopen(file, "r");
+        if (!f) {
+            fprintf(stderr, "Failed to open file %s\n", file);
+        }
 
-    if (!success)
-        return -1;
-    return 0;
+        fseek(f, 0, SEEK_END);
+        int len = ftell(f);
+        fseek(f, 0, SEEK_SET);
+        char *buf = malloc(len + 1);
+        if (!buf) {
+            fprintf(stderr, "Failed to allocate memory for file\n");
+        }
+
+        fread(buf, 1, len, f);
+        fclose(f);
+        buf[len] = '\0';
+
+        return run_perftsuite(buf);
+    } else {
+        run_perftree(argc, argv);
+    }
 }

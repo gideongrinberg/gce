@@ -10,7 +10,7 @@ with open(path / "perftsuite.epd") as f:
         fen = case[0]
         expected = [1]
         for j, num in enumerate(case[1:]):
-            if j >= 4:
+            if j >= 5:
                 break
             expected.append(int(num.split(" ")[1].strip()))
 
@@ -39,4 +39,5 @@ other_cases = [
 ]
 
 cases = other_cases + cases
-print(json.dumps(cases))
+with open(path / "cases.json", "w") as f:
+    json.dump(cases, f, indent=4)
