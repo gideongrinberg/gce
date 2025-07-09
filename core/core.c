@@ -11,6 +11,11 @@ void execute_move(Board *board, uint32_t move) {
     int promo = MOVE_PROMO(move);
 
     uint8_t piece = board->board[from];
+    if (GET_TYPE(piece) == PAWN || GET_TYPE(board->board[to]) != EMPTY) {
+        board->halfmoves = 0;
+    } else {
+        board->halfmoves++;
+    }
     if (GET_TYPE(piece) == KING) {
         if (castle(board, move, true)) {
             board->en_passant = -1;
@@ -204,12 +209,8 @@ Board *board_from_fen(const char *fen_string) {
         }
     }
 
-    fen = strtok(NULL, " ");
-    if (fen[0] == 'w') {
-        board->moves = 0;
-    } else {
-        board->moves = 1;
-    }
+    // store side to move
+    char *stm = strtok(NULL, " ");
 
     fen = strtok(NULL, " ");
     uint8_t castling_rights = 0;
@@ -242,7 +243,125 @@ Board *board_from_fen(const char *fen_string) {
         board->en_passant = BOARD_INDEX(ep_rank, ep_file);
     }
 
+    char *halfmoves = strtok(NULL, " ");
+    if (halfmoves == NULL) {
+        fprintf(stderr,
+                "FEN does not include half move counter, initializing to 0\n");
+        return board;
+    }
+
+    board->halfmoves = atoi(halfmoves);
+    char *moves = strtok(NULL, " ");
+    if (moves == NULL) {
+        fprintf(stderr, "FEN does not include half moves, initializing to 0\n");
+        return board;
+    }
+
+    if (strcmp(stm, "w") == 0) {
+        board->moves = (atoi(moves) - 1) * 2;
+    } else {
+        board->moves = (atoi(moves) - 1) * 2 + 1;
+    }
     return board;
+}
+
+Board *board_from_startpos() {
+    return board_from_fen(
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+}
+
+char *board_to_fen(Board *board) {
+    char *fen = malloc(128);
+    fen[0] = '\0';
+    int empty = 0;
+    for (int rank = 7; rank >= 0; rank--) {
+        for (int file = 0; file < 8; file++) {
+            uint8_t piece = board->board[BOARD_INDEX(rank, file)];
+            if (GET_TYPE(piece) == EMPTY) {
+                empty++;
+            } else {
+                if (empty > 0) {
+                    char tmp[2];
+                    sprintf(tmp, "%d", empty);
+                    strcat(fen, tmp);
+                    empty = 0;
+                }
+
+                char ch[2];
+                switch (GET_TYPE(piece)) {
+                case PAWN:
+                    ch[0] = 'P';
+                    break;
+                case KNIGHT:
+                    ch[0] = 'N';
+                    break;
+                case BISHOP:
+                    ch[0] = 'B';
+                    break;
+                case ROOK:
+                    ch[0] = 'R';
+                    break;
+                case QUEEN:
+                    ch[0] = 'Q';
+                    break;
+                case KING:
+                    ch[0] = 'K';
+                    break;
+                }
+
+                ch[1] = '\0';
+                if (GET_COLOR(piece) == PIECE_BLACK)
+                    ch[0] = tolower(ch[0]);
+
+                strcat(fen, ch);
+            }
+        }
+
+        if (empty > 0) {
+            char tmp[2];
+            sprintf(tmp, "%d", empty);
+            strcat(fen, tmp);
+            empty = 0;
+        }
+
+        if (rank != 0)
+            strcat(fen, "/");
+    }
+
+    sprintf(fen + strlen(fen), " %c ", board->moves % 2 == 0 ? 'w' : 'b');
+
+    char castling[6] = "";
+    if (board->castling_rights == 0) {
+        strcpy(castling, "-");
+    } else {
+        if (board->castling_rights & CASTLE_WHITE_KING)
+            strcat(castling, "K");
+        if (board->castling_rights & CASTLE_WHITE_QUEEN)
+            strcat(castling, "Q");
+        if (board->castling_rights & CASTLE_BLACK_KING)
+            strcat(castling, "k");
+        if (board->castling_rights & CASTLE_BLACK_QUEEN)
+            strcat(castling, "q");
+    }
+
+    strcat(castling, " ");
+    strcat(fen, castling);
+    if (board->en_passant != -1) {
+        char *ep_square = malloc(3);
+        sprintf(ep_square, "%c%d", 'a' + SQ_FILE(board->en_passant),
+                SQ_RANK(board->en_passant));
+
+        strcat(fen, ep_square);
+        free(ep_square);
+    } else {
+        strcat(fen, "-");
+    }
+
+    char move_counts[16];
+    sprintf(move_counts, " %d %d", board->halfmoves, (board->moves / 2) + 1);
+    strcat(fen, move_counts);
+
+    return fen;
 }
 
 Board *copy_board(const Board *original) {
@@ -281,4 +400,32 @@ char *move_to_string(uint32_t move) {
     }
 
     return ret;
+}
+uint32_t move_from_string(const char *move_str) {
+    const int from_file = move_str[0] - 'a', from_rank = move_str[1] - '1',
+              to_file = move_str[2] - 'a', to_rank = move_str[3] - '1';
+    const uint8_t from = BOARD_INDEX(from_rank, from_file),
+                  to = BOARD_INDEX(to_rank, to_file);
+
+    int promo = PROMO_NONE;
+    if (move_str[4] != '\0') {
+        switch (move_str[4]) {
+        case 'n':
+            promo = PROMO_N;
+            break;
+        case 'r':
+            promo = PROMO_R;
+            break;
+        case 'b':
+            promo = PROMO_B;
+            break;
+        case 'q':
+            promo = PROMO_Q;
+            break;
+        default:
+            break;
+        }
+    }
+
+    return ENCODE_MOVE(from, to, promo);
 }

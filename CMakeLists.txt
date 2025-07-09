@@ -33,6 +33,7 @@ add_library(gce-core STATIC # Shared code
         core/core.h
         core/core.c
         core/moves.c
+        core/search.c
 )
 
 # GUI code
@@ -64,6 +65,12 @@ if (APPLE) # raylib stuff for mac
     target_link_libraries(gce-gui "-framework OpenGL")
 endif ()
 
-add_executable(gce-perft perft/ # perft testing
+# perft testing
+add_executable(gce-perft perft/
         perft/main.c)
 target_link_libraries(gce-perft gce-core cjson)
+
+# UCI interface
+add_executable(gce-uci uci/ uci/main.c
+        uci/main.c)
+target_link_libraries(gce-uci gce-core)

@@ -9,8 +9,8 @@
 
 Game *new_game() {
     Game *game = malloc(sizeof(Game));
-    game->board = board_from_fen(
-        "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -");
+    game->board = board_from_fen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/"
+                                 "PPPBBPPP/R3K2R w KQkq - 3 10");
     game->selected_square = (Square){-1, -1};
 
     return game;
@@ -73,6 +73,8 @@ void game_update(Game *game) {
             game->selected_square = (Square){-1, -1};
         }
     }
+
+    puts(board_to_fen(game->board));
 }
 
 void game_draw(Game *game) { draw_board(game); }

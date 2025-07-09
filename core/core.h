@@ -48,6 +48,7 @@ typedef struct {
     uint8_t castling_rights;
     int en_passant;
     int moves;
+    int halfmoves;
 } Board;
 
 void execute_move(Board *board, uint32_t move);
@@ -63,13 +64,19 @@ bool castle(Board *board, uint32_t move, bool make_move);
  */
 int get_legal_moves(Board *board, uint32_t *arr);
 
+uint32_t best_move(Board *board);
+
 /*
  * Creates a `Board` from a FEN string.
  * Does not support en-passant or move counters,
  * but includes castling rights and next-to-move.
  */
 Board *board_from_fen(const char *fen_string);
+Board *board_from_startpos();
 Board *copy_board(const Board *original);
+
+char *board_to_fen(Board *board);
 char *move_to_string(uint32_t move);
+uint32_t move_from_string(const char *move_str);
 bool is_square_attacked(Board *board, int sq, uint8_t attacker_color);
 #endif // CORE_H
