@@ -10,7 +10,7 @@
 Game *new_game() {
     Game *game = malloc(sizeof(Game));
     game->board = board_from_fen(
-        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+        "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -");
     game->selected_square = (Square){-1, -1};
 
     return game;
@@ -61,8 +61,9 @@ void game_update(Game *game) {
                     ENCODE_MOVE(BOARD_INDEX(game->selected_square.rank,
                                             game->selected_square.file),
                                 BOARD_INDEX(rank, file), PROMO_NONE);
-                execute_move(game->board, move);
                 printf("%s ", move_to_string(move));
+                fflush(stdout);
+                execute_move(game->board, move);
                 game->selected_square = (Square){-1, -1};
                 game->possible_squares = 0;
             }

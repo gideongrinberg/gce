@@ -13,6 +13,7 @@ void execute_move(Board *board, uint32_t move) {
     uint8_t piece = board->board[from];
     if (GET_TYPE(piece) == KING) {
         if (castle(board, move, true)) {
+            board->en_passant = -1;
             board->moves++;
             return;
         }
@@ -255,7 +256,29 @@ char *move_to_string(uint32_t move) {
         to_file = SQ_FILE(to), to_rank = SQ_RANK(to);
     char from_char = 'a' + from_file, to_char = 'a' + to_file;
 
-    char *ret = malloc(5);
+    char *ret = malloc(6);
     sprintf(ret, "%c%d%c%d", from_char, from_rank + 1, to_char, to_rank + 1);
+    if (MOVE_PROMO(move) != PROMO_NONE) {
+        const char *promo = "";
+        switch (MOVE_PROMO(move)) {
+        case PROMO_B:
+            promo = "b";
+            break;
+        case PROMO_N:
+            promo = "n";
+            break;
+        case PROMO_R:
+            promo = "r";
+            break;
+        case PROMO_Q:
+            promo = "q";
+            break;
+        default:
+            break;
+        }
+
+        strcat(ret, promo);
+    }
+
     return ret;
 }
