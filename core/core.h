@@ -70,6 +70,6 @@ int get_legal_moves(Board *board, uint32_t *arr);
  */
 Board *board_from_fen(const char *fen_string);
 Board *copy_board(const Board *original);
-char *move_to_string(uint8_t move);
-bool is_square_attacked(Board *board, int sq);
+char *move_to_string(uint32_t move);
+bool is_square_attacked(Board *board, int sq, uint8_t attacker_color);
 #endif // CORE_H

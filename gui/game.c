@@ -10,7 +10,7 @@
 Game *new_game() {
     Game *game = malloc(sizeof(Game));
     game->board = board_from_fen(
-        "rbnqknbr/pppppppp/8/8/8/8/PPPPPPPP/RBNQKNBR w KQkq - 0 1");
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
     game->selected_square = (Square){-1, -1};
 
     return game;
@@ -62,6 +62,7 @@ void game_update(Game *game) {
                                             game->selected_square.file),
                                 BOARD_INDEX(rank, file), PROMO_NONE);
                 execute_move(game->board, move);
+                printf("%s ", move_to_string(move));
                 game->selected_square = (Square){-1, -1};
                 game->possible_squares = 0;
             }

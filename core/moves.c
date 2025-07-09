@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+const int knight_offsets[8] = {33, 18, -14, -31, -33, -18, 14, 31};
 const int rook_directions[4] = {-16, 16, -1, 1};
 const int bishop_directions[4] = {-15, -17, 15, 17};
 const int queen_directions[8] = {-16, 16, -1, 1, -15, -17, 15, 17};
@@ -51,9 +52,8 @@ static void generate_pawn_moves(const Board *board, uint32_t *arr, int *moves,
 
 static void generate_knight_moves(const Board *board, uint32_t *arr, int *moves,
                                   const uint8_t color, const int idx) {
-    static const int offsets[8] = {33, 18, -14, -31, -33, -18, 14, 31};
     for (int j = 0; j < 8; j++) {
-        int target = idx + offsets[j];
+        int target = idx + knight_offsets[j];
         if ((target & 0x88) == 0 &&
             (board->board[target] == EMPTY ||
              GET_COLOR(board->board[target]) != color)) {
@@ -149,17 +149,88 @@ int get_pseudolegal_moves(Board *board, uint32_t *arr) {
     return moves;
 }
 
-bool is_square_attacked(Board *board, int sq) {
-    uint32_t moves[256];
-    // increment moves
-    int num_moves = get_pseudolegal_moves(board, moves);
-    for (int i = 0; i < num_moves; i++) {
-        uint32_t move = moves[i];
-        if (MOVE_TO(move) == sq) {
+// checks if the piece on attacker attacks the target square
+// based on the provided list of offsets.
+bool check_offset_attacker(int attacker, int target, const int *offsets,
+                           int n_offsets) {
+    for (int i = 0; i < n_offsets; i++) {
+        int sq = attacker + offsets[i];
+        if ((sq & 0x88) == 0 && sq == target) {
             return true;
         }
     }
+    return false;
+}
 
+bool check_sliding_attacker(Board *board, int attacker, int target,
+                            const int *directions, int n_directions) {
+    int delta = target - attacker;
+    for (int i = 0; i < n_directions; i++) {
+        int dir = directions[i];
+        // check if the target lies along this ray (target is
+        // a whole, positive number of steps in the given direction).
+        if (delta % dir != 0 || delta / dir < 0)
+            continue;
+
+        int sq = attacker + dir;
+        while ((sq & 0x88) == 0) {
+            if (sq == target)
+                return true;
+            if (GET_TYPE(board->board[sq]) != EMPTY)
+                break;
+            sq += dir;
+        }
+    }
+
+    return false;
+}
+
+bool is_square_attacked(Board *board, int sq, uint8_t attacker_color) {
+    for (int i = 0; i < 128; i++) {
+        if ((i & 0x88) || GET_COLOR(board->board[i]) != attacker_color)
+            continue;
+
+        switch (GET_TYPE(board->board[i])) {
+        case PAWN: {
+            int sign = attacker_color == PIECE_WHITE ? 1 : -1;
+            int capture_offsets[2] = {sign * 15, sign * 17};
+            if (check_offset_attacker(i, sq, capture_offsets, 2))
+                return true;
+            break;
+        }
+        case KNIGHT:
+            if (check_offset_attacker(i, sq, knight_offsets, 8))
+                return true;
+            break;
+        case BISHOP:
+        case ROOK:
+        case QUEEN: {
+            const int *dirs;
+            int n_dirs;
+            switch (GET_TYPE(board->board[i])) {
+            case BISHOP:
+                dirs = bishop_directions;
+                n_dirs = 4;
+                break;
+            case ROOK:
+                dirs = rook_directions;
+                n_dirs = 4;
+                break;
+            case QUEEN:
+                dirs = queen_directions;
+                n_dirs = 8;
+                break;
+            }
+            if (check_sliding_attacker(board, i, sq, dirs, n_dirs))
+                return true;
+            break;
+        }
+        case KING:
+            if (check_offset_attacker(i, sq, king_offsets, 8))
+                return true;
+            break;
+        }
+    }
     return false;
 }
 
@@ -197,13 +268,15 @@ int get_legal_moves(Board *board, uint32_t *arr) {
         find_kings(test_board, &white_king, &black_king);
 
         int king_sq;
+        uint8_t attacker_color;
         if (board->moves % 2 == 0) {
             king_sq = white_king;
+            attacker_color = PIECE_BLACK;
         } else {
             king_sq = black_king;
+            attacker_color = PIECE_WHITE;
         }
-
-        if (!is_square_attacked(test_board, king_sq)) {
+        if (!is_square_attacked(test_board, king_sq, attacker_color)) {
             arr[moves++] = move;
         }
 

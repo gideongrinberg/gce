@@ -2,10 +2,8 @@ import glob
 import pathlib
 import os
 
-
 def sanitize_symbol(name):
     return name.replace('.', '_').replace('-', '_')
-
 
 image_dir = pathlib.Path(__file__).resolve().parent
 png_files = glob.glob((image_dir / "*.png").as_posix())

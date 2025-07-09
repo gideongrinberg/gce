@@ -13,7 +13,28 @@ void execute_move(Board *board, uint32_t move) {
     uint8_t piece = board->board[from];
     if (GET_TYPE(piece) == KING) {
         if (castle(board, move, true)) {
+            board->moves++;
             return;
+        }
+
+        if (GET_COLOR(piece) == PIECE_BLACK)
+            board->castling_rights &= ~(CASTLE_BLACK_KING | CASTLE_BLACK_QUEEN);
+        else
+            board->castling_rights &= ~(CASTLE_WHITE_KING | CASTLE_WHITE_QUEEN);
+    } else if (GET_TYPE(piece) == ROOK) {
+        switch (MOVE_FROM(move)) {
+        case 0x07:
+            board->castling_rights &= ~CASTLE_WHITE_KING;
+            break;
+        case 0x00:
+            board->castling_rights &= ~CASTLE_WHITE_QUEEN;
+            break;
+        case 0x77:
+            board->castling_rights &= ~CASTLE_BLACK_KING;
+            break;
+        case 0x70:
+            board->castling_rights &= ~CASTLE_BLACK_QUEEN;
+            break;
         }
     }
 
@@ -40,9 +61,8 @@ void execute_move(Board *board, uint32_t move) {
     board->board[from] = EMPTY;
     board->board[to] = piece;
     int sign = (board->moves % 2) == 0 ? 1 : -1;
-
     // check for en-passant capture
-    if (to == board->en_passant) {
+    if (to == board->en_passant && piece_type == PAWN) {
         board->board[to - (sign * 16)] = EMPTY;
     }
 
@@ -83,21 +103,31 @@ bool castle(Board *board, uint32_t move, bool make_move) {
         return false;
     }
 
-    int rank = SQ_RANK(from);
-    int file1 = SQ_FILE(from);
-    int file2 = SQ_FILE(rook_from);
-    int min_file = (file1 < file2) ? file1 : file2;
-    int max_file = (file1 > file2) ? file1 : file2;
-    // Check no pieces between king and rook.
-    for (int f = min_file + 1; f < max_file; f++) {
-        int idx = BOARD_INDEX(rank, f);
-        if (board->board[idx] != EMPTY)
-            return false;
+    // King safety check
+    uint8_t attacker_color = color == PIECE_WHITE ? PIECE_BLACK : PIECE_WHITE;
+    uint8_t transit_square = from + ((to - from) / 2);
+    if (is_square_attacked(board, transit_square, attacker_color) ||
+        is_square_attacked(board, from, attacker_color) ||
+        is_square_attacked(board, to, attacker_color)) {
+        return false;
     }
 
     // check that the piece in the rook spot is actually a rook
     if (board->board[rook_from] != (color | ROOK)) {
         return false;
+    }
+
+    // Check no pieces between king and rook.
+    int rank = SQ_RANK(from);
+    int file1 = SQ_FILE(from);
+    int file2 = SQ_FILE(rook_from);
+    int min_file = (file1 < file2) ? file1 : file2;
+    int max_file = (file1 > file2) ? file1 : file2;
+
+    for (int f = min_file + 1; f < max_file; f++) {
+        int idx = BOARD_INDEX(rank, f);
+        if (board->board[idx] != EMPTY)
+            return false;
     }
 
     if (make_move) {
@@ -202,9 +232,15 @@ Board *board_from_fen(const char *fen_string) {
     }
 
     board->castling_rights = castling_rights;
+    fen = strtok(NULL, " ");
+    if (fen[0] == '-') {
+        board->en_passant = -1;
+    } else {
+        int ep_rank = fen[0] - 'a';
+        int ep_file = fen[1] - '1';
+        board->en_passant = BOARD_INDEX(ep_rank, ep_file);
+    }
 
-    // todo: implement en passant
-    board->en_passant = -1;
     return board;
 }
 
@@ -213,7 +249,7 @@ Board *copy_board(const Board *original) {
     memcpy(copy, original, sizeof(Board));
     return copy;
 }
-char *move_to_string(uint8_t move) {
+char *move_to_string(uint32_t move) {
     int from = MOVE_FROM(move), to = MOVE_TO(move);
     int from_file = SQ_FILE(from), from_rank = SQ_RANK(from),
         to_file = SQ_FILE(to), to_rank = SQ_RANK(to);
