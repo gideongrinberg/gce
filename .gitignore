@@ -1,4 +1,4 @@
 .DS_Store
-gui/resources.h
-gui/resources.c
+gui/assets.h
+gui/assets.c
 build/
