@@ -66,16 +66,20 @@ int main(void) {
         }
 
         if (strncmp(buffer, "go", 2) == 0) {
-            char *output = malloc(64);
+            char output[64];
             uint32_t move = best_move(board);
             if (move == 0)
                 LOG("No move found");
             else
                 LOG(move_to_string(move));
 
+            Board *board_copy = copy_board(board);
+            execute_move(board_copy, move);
+            sprintf(output, "info depth 10 score cp %d",
+                    eval_board(board_copy));
+            SEND_MESSAGE(output);
             sprintf(output, "bestmove %s", move_to_string(move));
             SEND_MESSAGE(output);
-            free(output);
         }
 
         if (strcmp(buffer, "fen") == 0) {

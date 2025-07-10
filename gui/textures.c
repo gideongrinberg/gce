@@ -1,6 +1,6 @@
 #include "textures.h"
+#include "assets.h"
 #include "core.h"
-#include "images.h"
 #include <stddef.h>
 Texture2D piece_textures[2][7];
 

@@ -369,6 +369,62 @@ Board *copy_board(const Board *original) {
     memcpy(copy, original, sizeof(Board));
     return copy;
 }
+
+bool is_checkmate(Board *board) {
+    int player_color = (board->moves % 2) == 0 ? PIECE_WHITE : PIECE_BLACK;
+    int attacker_color = (board->moves % 2) == 0 ? PIECE_BLACK : PIECE_WHITE;
+    int king_sq = -1;
+    for (int rank = 0; rank < 8; rank++) {
+        for (int file = 0; file < 8; file++) {
+            if (board->board[BOARD_INDEX(rank, file)] ==
+                (player_color | KING)) {
+                king_sq = BOARD_INDEX(rank, file);
+                break;
+            }
+        }
+    }
+
+    if (king_sq == -1)
+        return false;
+    if (!is_square_attacked(board, king_sq, attacker_color)) {
+        return false;
+    }
+
+    uint32_t moves[256];
+    int num_moves = get_legal_moves(board, moves);
+    for (int move = 0; move < num_moves; move++) {
+        Board *board_copy = copy_board(board);
+        execute_move(board_copy, move);
+        if (MOVE_FROM(move) == king_sq &&
+            !is_square_attacked(board_copy, MOVE_TO(move), attacker_color)) {
+            free(board_copy);
+            return false;
+        }
+
+        if (!is_square_attacked(board_copy, MOVE_FROM(move), attacker_color)) {
+            free(board_copy);
+            return false;
+        }
+
+        free(board_copy);
+    }
+
+    return true;
+}
+
+Outcome board_outcome(Board *board) {
+    if (board->halfmoves >= 50)
+        return Draw;
+    if (is_checkmate(board))
+        return Checkmate;
+
+    uint32_t moves[256];
+    if (get_legal_moves(board, moves) == 0)
+        return Draw;
+
+    return Ongoing;
+}
+
 char *move_to_string(uint32_t move) {
     int from = MOVE_FROM(move), to = MOVE_TO(move);
     int from_file = SQ_FILE(from), from_rank = SQ_RANK(from),
@@ -401,6 +457,7 @@ char *move_to_string(uint32_t move) {
 
     return ret;
 }
+
 uint32_t move_from_string(const char *move_str) {
     const int from_file = move_str[0] - 'a', from_rank = move_str[1] - '1',
               to_file = move_str[2] - 'a', to_rank = move_str[3] - '1';

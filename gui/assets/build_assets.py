@@ -2,20 +2,22 @@ import glob
 import pathlib
 import os
 
+
 def sanitize_symbol(name):
-    return name.replace('.', '_').replace('-', '_')
+    return name.replace('.', '_').replace('-', '_').lower()
 
-image_dir = pathlib.Path(__file__).resolve().parent
-png_files = glob.glob((image_dir / "*.png").as_posix())
 
-header_path = image_dir.parent / "images.h"
-source_path = image_dir.parent / "images.c"
+res_dir = pathlib.Path(__file__).resolve().parent
+all_files = lambda ext: glob.glob((res_dir / f"*.{ext}").as_posix())
+files = all_files('png') + all_files('ttf')
+header_path = res_dir.parent / "assets.h"
+source_path = res_dir.parent / "assets.c"
 
 with open(header_path, "w") as header:
-    header.write("// Auto-generated header with embedded PNG image data\n\n")
-    header.write("#ifndef IMAGES_H\n#define IMAGES_H\n\n")
+    header.write("// Auto-generated header with embedded image and font data\n\n")
+    header.write("#ifndef ASSETS_H\n#define ASSETS_H\n\n")
 
-    for file in png_files:
+    for file in files:
         filename = os.path.basename(file)
         symbol_base = sanitize_symbol(filename)
 
@@ -23,12 +25,12 @@ with open(header_path, "w") as header:
         header.write(f"extern unsigned char {symbol_base}[];\n")
         header.write(f"extern unsigned int {symbol_base}_len;\n\n")
 
-    header.write("#endif // IMAGES_H\n")
+    header.write("#endif // ASSETS_H\n")
 
 with open(source_path, "w") as source:
-    source.write("// Auto-generated source file with embedded PNG image data\n\n")
+    source.write("// Auto-generated source file with embedded image and font data\n\n")
 
-    for file in png_files:
+    for file in files:
         filename = os.path.basename(file)
         symbol_base = sanitize_symbol(filename)
 

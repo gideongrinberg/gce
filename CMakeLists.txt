@@ -15,6 +15,15 @@ set(FETCHCONTENT_QUIET OFF)
 set(BUILD_EXAMPLES OFF)
 FetchContent_MakeAvailable(raylib)
 
+# Add raylib nuklear
+FetchContent_Declare(
+        raylib_nuklear
+        GIT_REPOSITORY https://github.com/RobLoach/raylib-nuklear
+        GIT_TAG v5.5.1
+)
+
+FetchContent_MakeAvailable(raylib_nuklear)
+
 # cJSON for perft
 FetchContent_Declare(
         cJSON
@@ -34,13 +43,14 @@ add_library(gce-core STATIC # Shared code
         core/core.c
         core/moves.c
         core/search.c
+        core/eval.c
 )
 
 # GUI code
 add_executable(gce-gui gui/
         gui/main.c
-        gui/images.c
-        gui/images.h
+        gui/assets.c
+        gui/assets.h
         gui/game.c
         gui/game.h
         gui/textures.h
@@ -58,7 +68,7 @@ add_custom_target(gui_assets
 )
 
 add_dependencies(gce-gui gui_assets)
-target_link_libraries(gce-gui gce-core raylib)
+target_link_libraries(gce-gui gce-core raylib raylib_nuklear)
 if (APPLE) # raylib stuff for mac
     target_link_libraries(gce-gui "-framework IOKit")
     target_link_libraries(gce-gui "-framework Cocoa")

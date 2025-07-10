@@ -1,2 +1,4 @@
 .DS_Store
-gui/images.*
+gui/resources.h
+gui/resources.c
+build/

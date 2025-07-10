@@ -51,6 +51,8 @@ typedef struct {
     int halfmoves;
 } Board;
 
+typedef enum { Checkmate, Stalemate, Draw, Ongoing } Outcome;
+
 void execute_move(Board *board, uint32_t move);
 
 /*
@@ -63,6 +65,7 @@ bool castle(Board *board, uint32_t move, bool make_move);
  * `arr` should be `uint32_t[256]`.
  */
 int get_legal_moves(Board *board, uint32_t *arr);
+int eval_board(Board *board);
 
 uint32_t best_move(Board *board);
 
@@ -74,6 +77,7 @@ uint32_t best_move(Board *board);
 Board *board_from_fen(const char *fen_string);
 Board *board_from_startpos();
 Board *copy_board(const Board *original);
+Outcome board_outcome(Board *board);
 
 char *board_to_fen(Board *board);
 char *move_to_string(uint32_t move);
