@@ -6,9 +6,15 @@
 #include "raylib-nuklear.h"
 
 #define BOARD_SIZE 8
+#ifndef EMSCRIPTEN
 #define SELECTED_COLOR (Color){72, 118, 255, 180}  // Light blue
 #define POSSIBLE_COLOR (Color){255, 255, 102, 160} // Yellow
+#else
+#define SELECTED_COLOR (Color){72, 118, 255, 255}  // Light blue
+#define POSSIBLE_COLOR (Color){255, 255, 102, 255} // Yellow
+#endif
 
+struct nk_context;
 typedef struct {
     int rank;
     int file;
@@ -40,6 +46,7 @@ void game_draw_gui(struct nk_context *ctx, Game *game);
 void draw_board(Game *game);
 void draw_debug_text(Game *game);
 
-bool get_mouse_square(int mouseX, int mouseY, int screenWidth, int screenHeight,
-                      int *outRank, int *outFile, bool reverse);
+bool get_mouse_square(float mouseX, float mouseY, int screenWidth,
+                      int screenHeight, int *outRank, int *outFile,
+                      bool reverse);
 #endif // GUI_H

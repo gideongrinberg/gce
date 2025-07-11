@@ -2,3 +2,6 @@
 gui/assets.h
 gui/assets.c
 build/
+
+*.a
+*.o
