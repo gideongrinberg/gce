@@ -77,6 +77,8 @@ if (EMSCRIPTEN)
             "-sWASM=1"
             "-sASYNCIFY"
             "-sGL_ENABLE_GET_PROC_ADDRESS=1"
+            "-sEXPORTED_FUNCTIONS=_main,_on_browser_resize"
+            "-sEXPORTED_RUNTIME_METHODS=ccall,cwrap"
             "--shell-file=${CMAKE_SOURCE_DIR}/shell.html"
     )
 endif ()

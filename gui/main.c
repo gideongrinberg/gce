@@ -6,6 +6,8 @@
 #include "raylib.h"
 #include "textures.h"
 
+#include <stdio.h>
+
 #ifdef EMSCRIPTEN
 #include <emscripten/emscripten.h>
 #endif
@@ -26,11 +28,25 @@ void game_loop() {
     EndDrawing();
 }
 
+#ifdef EMSCRIPTEN
+int width, height;
+EM_JS(int, canvas_get_width, (), { return Module.canvas.width; });
+EM_JS(int, canvas_get_height, (), { return Module.canvas.height; });
+
+EMSCRIPTEN_KEEPALIVE void on_browser_resize(void) {
+    SetWindowSize(canvas_get_width(), canvas_get_height());
+}
+#else
+int width = 800, height = 450;
+#endif
+
 int main(void) {
-#ifndef EMSCRIPTEN
+#ifdef EMSCRIPTEN
+    width = canvas_get_width(), height = canvas_get_height();
+#else
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
 #endif
-    InitWindow(800, 450, "Gideon's Chess Engine v0.1.0 (GUI Client)");
+    InitWindow(width, height, "Gideon's Chess Engine v0.1.0 (GUI Client)");
     font = LoadFontFromMemory(".ttf", roboto_ttf, (int)roboto_ttf_len, 18, NULL,
                               0);
     ctx = InitNuklearEx(font, 18);

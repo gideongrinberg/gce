@@ -76,6 +76,22 @@
 <canvas class=emscripten id=canvas oncontextmenu=event.preventDefault() tabindex=-1></canvas>
 <p id="output"/>
 <script>
+    function resizeCanvas() {
+        const canvas = Module.canvas;
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+
+        canvas.style.width = width + "px";
+        canvas.style.height = height + "px";
+
+        canvas.width = width;
+        canvas.height = height;
+
+        if (Module._on_browser_resize) {
+            Module._on_browser_resize();
+        }
+    }
+
     var Module = {
         print: (function () {
             var element = document.getElementById('output');
@@ -92,7 +108,11 @@
         canvas: (function () {
             var canvas = document.getElementById('canvas');
             return canvas;
-        })()
+        })(),
+        onRuntimeInitialized: (function () {
+            resizeCanvas();
+            window.addEventListener("resize", () => resizeCanvas());
+        })
     };
 </script>
 {{{ SCRIPT }}}
