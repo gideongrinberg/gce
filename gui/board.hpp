@@ -30,4 +30,11 @@ class Board {
     int getClicked();
 };
 
+inline Vector2 squareToScreen(int square, int tileSize) {
+    int file = square % 8;
+    int rank = 7 - (square / 8); // Flip Y for rendering
+    return {static_cast<float>(file * tileSize),
+            static_cast<float>(rank * tileSize)};
+}
+
 #endif // BOARD_HPP

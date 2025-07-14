@@ -14,22 +14,20 @@ void Board::draw() const {
     // draw squares
     for (int sq = 0; sq < 64; sq++) {
         Color color = ((sq / 8 + sq % 8) % 2 == 1) ? DARKBROWN : BEIGE;
-        int x = sq % 8, y = sq / 8;
-        DrawRectangle(x * tileSize, y * tileSize, tileSize, tileSize, color);
+        Vector2 pos = squareToScreen(sq, tileSize);
+        DrawRectangle(pos.x, pos.y, tileSize, tileSize, color);
     }
 
     // highlight selected sq
     if (selectedSq != -1) {
-        int x = selectedSq % 8, y = selectedSq / 8;
-        DrawRectangle(x * tileSize, y * tileSize, tileSize, tileSize,
-                      SELECTED_COLOR);
+        Vector2 pos = squareToScreen(selectedSq, tileSize);
+        DrawRectangle(pos.x, pos.y, tileSize, tileSize, SELECTED_COLOR);
     }
 
     FOREACH_SET_BIT(legalMoves, sq) {
         std::cout << sq << std::endl;
-        int x = sq % 8, y = sq / 8;
-        DrawRectangle(x * tileSize, y * tileSize, tileSize, tileSize,
-                      SELECTED_COLOR);
+        Vector2 pos = squareToScreen(sq, tileSize);
+        DrawRectangle(pos.x, pos.y, tileSize, tileSize, SELECTED_COLOR);
     }
 
     // draw pieces
@@ -41,14 +39,13 @@ void Board::draw() const {
     for (auto color : colors) {
         for (auto piece : pieces) {
             FOREACH_SET_BIT(position->bitboards[color | piece], sq) {
-                int x = sq % 8, y = 7 - (sq / 8); // y is inverted
+                Vector2 pos = squareToScreen(sq, tileSize);
                 Texture2D tex = getPieceTexture(color | piece);
                 Rectangle src = {0, 0, static_cast<float>(tex.width),
                                  static_cast<float>(tex.height)};
-                Rectangle dst = {static_cast<float>(tileSize * x),
-                                 static_cast<float>(tileSize * y),
-                                 static_cast<float>(tileSize),
+                Rectangle dst = {pos.x, pos.y, static_cast<float>(tileSize),
                                  static_cast<float>(tileSize)};
+
                 Vector2 origin = {0.0f, 0.0f};
                 DrawTexturePro(tex, src, dst, origin, 0.0f, WHITE);
             }
@@ -78,6 +75,8 @@ void Board::update() {
             }
 
             std::cout << legalMoves << std::endl;
+        } else if (legalMoves & (1ULL << clicked)) {
+            // todo: move execution
         }
     }
 }
@@ -129,7 +128,7 @@ int Board::getClicked() {
         float scale = boardSize.x / 8.0f;
 
         int file = static_cast<int>(relX / scale);
-        int rank = static_cast<int>(relY / scale);
+        int rank = 7 - static_cast<int>(relY / scale);
 
         int square = rank * 8 + file;
 
