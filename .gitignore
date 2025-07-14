@@ -5,3 +5,5 @@ build/
 
 *.a
 *.o
+
+tables.c
