@@ -344,7 +344,7 @@ def main():
 {Bishop().generate_code()}
 """
 
-    with open((Path(__file__).parent / "tables.c").as_posix(), "w") as f:
+    with open((Path(__file__).parent / ".." / "tables.c").as_posix(), "w") as f:
         f.write(code)
 
     # this should probably be part of the code at some point.
@@ -367,7 +367,7 @@ extern const uint64_t king_moves[64];
     header_end = "#endif // TABLES_H"
     header = header_start + "\n" + header_content + "\n" + header_end
 
-    with open((Path(__file__).parent / "tables.h").as_posix(), "w") as f:
+    with open((Path(__file__).parent / ".." / "tables.h").as_posix(), "w") as f:
         f.write(header)
 
 

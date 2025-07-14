@@ -1,65 +1,6 @@
-#include "tables.h"
-
-#include <ctype.h>
-#include <stdbool.h>
-#include <stdint.h>
+#include "position.h"
 #include <stdio.h>
-#include <stdlib.h>
-
-typedef uint64_t uint64;
-
-/*
- * The engine represents pieces as 8-bit integers where the
- * lowest 3 bits are the piece type and the 4th bit is the color.
- * So, since black is 0b1000 (8) and a knight is 0b0001, a black
- * knight is 0b1001.
- *
- * The color value can be "flipped" (black->white/white->black)
- * using color^8.
- */
-typedef uint8_t Piece;
-enum Pieces {
-    PIECE_WHITE = 0,
-    PIECE_BLACK = 8,
-    PIECE_PAWN = 0,
-    PIECE_KNIGHT = 1,
-    PIECE_BISHOP = 2,
-    PIECE_ROOK = 3,
-    PIECE_QUEEN = 4,
-    PIECE_KING = 5,
-    NUM_PIECE = 12,
-    MAX_PIECE = (1 << 4)
-};
-
-#define MAKE_PIECE(color, kind) (color | kind)
-#define PIECE_TYPE(p) ((p) & 7)
-#define PIECE_COLOR(p) ((p) & 8)
-
-/**
- * We encode moves as 16-bit integers with 6 bits for
- * from and to and 4 bits for promotion (1-4 for N-Q)
- */
-typedef uint16_t Move;
-#define ENCODE_MOVE(from, to, promo)                                           \
-    (((from) & 0x3F) | (((to) & 0x3F) << 6) | (((promo) & 0xF) << 12))
-
-#define MOVE_FROM(move) ((move) & 0x3F)
-#define MOVE_TO(move) (((move) >> 6) & 0x3F)
-#define MOVE_PROMO(move) (((move) >> 12) & 0xF)
-
-/**
- * We encode castling rights as a bitflag.
- */
-typedef uint8_t CastlingRights;
-enum CastlingRights {
-    CASTLE_WHITE_KING = 1,
-    CASTLE_WHITE_QUEEN = 2,
-    CASTLE_BLACK_KING = 4,
-    CASTLE_BLACK_QUEEN = 8,
-
-    CASTLE_ALL = 1 | 2 | 4 | 8,
-    CASTLE_NONE = 0
-};
+#include "tables.h"
 
 // Masks to isolate a specific rank or file of a bitboard
 #define RANK_2 0x000000000000FF00ULL
@@ -71,11 +12,6 @@ enum CastlingRights {
 
 #define FILE_A 0x0101010101010101ULL
 #define FILE_H 0x8080808080808080ULL
-
-typedef struct {
-    uint64 bitboards[MAX_PIECE];
-    CastlingRights castling_rights;
-} Position;
 
 // Combines all the bitboards of the given color.
 #define GET_COLOR_OCCUPIED(p, color)                                           \
@@ -202,20 +138,20 @@ void print_position(Position *p) {
     }
 }
 
-uint64 generate_attacks(Position *p, int color) {
-    uint64 attacks = 0;
+uint64_t generate_attacks(Position *p, int color) {
+    uint64_t attacks = 0;
 
     int shift_left = (color == PIECE_WHITE) ? 7 : -9;
     int shift_right = (color == PIECE_WHITE) ? 9 : -7;
-    uint64 mask_left = (color == PIECE_WHITE) ? ~FILE_H : ~FILE_A;
-    uint64 mask_right = (color == PIECE_WHITE) ? ~FILE_A : ~FILE_H;
-    uint64 pawns = p->bitboards[color | PIECE_PAWN];
+    uint64_t mask_left = (color == PIECE_WHITE) ? ~FILE_H : ~FILE_A;
+    uint64_t mask_right = (color == PIECE_WHITE) ? ~FILE_A : ~FILE_H;
+    uint64_t pawns = p->bitboards[color | PIECE_PAWN];
 
-    uint64 left_captures = shift_left >= 0
+    uint64_t left_captures = shift_left >= 0
                                ? ((pawns & mask_left) << shift_left)
                                : ((pawns & mask_left) >> -shift_left);
 
-    uint64 right_captures = shift_right >= 0
+    uint64_t right_captures = shift_right >= 0
                                 ? ((pawns & mask_right) << shift_right)
                                 : ((pawns & mask_right) >> -shift_right);
 
@@ -247,16 +183,16 @@ static inline void add_pawn_moves(uint64_t bb, int shift, Move *arr,
 
 int generate_moves(Position *p, int color, Move *arr) {
     int moves_count = 0;
-    uint64 own_pieces = GET_COLOR_OCCUPIED(p, color);
-    uint64 opponent_pieces = GET_COLOR_OCCUPIED(p, color ^ 8);
+    uint64_t own_pieces = GET_COLOR_OCCUPIED(p, color);
+    uint64_t opponent_pieces = GET_COLOR_OCCUPIED(p, color ^ 8);
 
     // Generate pawn moves
-    uint64 pawns = p->bitboards[color | PIECE_PAWN];
-    uint64 empty = ~GET_OCCUPIED(p);
-    uint64 single_push =
+    uint64_t pawns = p->bitboards[color | PIECE_PAWN];
+    uint64_t empty = ~GET_OCCUPIED(p);
+    uint64_t single_push =
         (color == PIECE_WHITE) ? (pawns << 8) & empty : (pawns >> 8) & empty;
-    uint64 rank = (color == PIECE_WHITE) ? RANK_3 : RANK_6;
-    uint64 double_push = (color == PIECE_WHITE)
+    uint64_t rank = (color == PIECE_WHITE) ? RANK_3 : RANK_6;
+    uint64_t double_push = (color == PIECE_WHITE)
                              ? ((single_push & rank) << 8) & empty
                              : ((single_push & rank) >> 8) & empty;
 
@@ -267,16 +203,16 @@ int generate_moves(Position *p, int color, Move *arr) {
     // Generate pawn captures
     int shift_left = (color == PIECE_WHITE) ? 7 : -9;
     int shift_right = (color == PIECE_WHITE) ? 9 : -7;
-    uint64 mask_left = (color == PIECE_WHITE) ? ~FILE_H : ~FILE_A;
-    uint64 mask_right = (color == PIECE_WHITE) ? ~FILE_A : ~FILE_H;
+    uint64_t mask_left = (color == PIECE_WHITE) ? ~FILE_H : ~FILE_A;
+    uint64_t mask_right = (color == PIECE_WHITE) ? ~FILE_A : ~FILE_H;
     pawns = p->bitboards[color | PIECE_PAWN];
 
-    uint64 left_captures =
+    uint64_t left_captures =
         shift_left >= 0
             ? ((pawns & mask_left) << shift_left) & opponent_pieces
             : ((pawns & mask_left) >> -shift_left) & opponent_pieces;
 
-    uint64 right_captures =
+    uint64_t right_captures =
         shift_right >= 0
             ? ((pawns & mask_right) << shift_right) & opponent_pieces
             : ((pawns & mask_right) >> -shift_right) & opponent_pieces;
@@ -286,18 +222,11 @@ int generate_moves(Position *p, int color, Move *arr) {
 
     uint64_t knights = p->bitboards[MAKE_PIECE(color, PIECE_KNIGHT)];
     FOREACH_SET_BIT(knights, from) {
-        uint64 attacks = knight_moves[from] & ~(own_pieces);
+        uint64_t attacks = knight_moves[from] & ~(own_pieces);
         FOREACH_SET_BIT(attacks, to) {
             arr[moves_count++] = ENCODE_MOVE(from, to, 0);
         }
     }
 
     return moves_count;
-}
-
-int main(void) {
-    Position *p = pos_from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR ");
-    Move moves[256];
-    printf("%d", generate_moves(p, PIECE_WHITE, moves));
-    return 0;
 }
