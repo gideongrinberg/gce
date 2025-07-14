@@ -38,7 +38,7 @@ void Board::draw() const {
 
     for (auto color : colors) {
         for (auto piece : pieces) {
-            FOREACH_SET_BIT(position->bitboards[color | piece], sq) {
+            FOREACH_SET_BIT(position.bitboards[color | piece], sq) {
                 Vector2 pos = squareToScreen(sq, tileSize);
                 Texture2D tex = getPieceTexture(color | piece);
                 Rectangle src = {0, 0, static_cast<float>(tex.width),
@@ -59,14 +59,13 @@ void Board::update() {
     int clicked = getClicked();
     if (clicked != -1) {
         // if piece selected
-        if (GET_OCCUPIED(position) & (1ULL << clicked)) {
+        if (GET_OCCUPIED(&position) & (1ULL << clicked)) {
             selectedSq = clicked;
 
             // update legal moves
             legalMoves = 0;
             std::array<Move, 256> moves = {};
-            int numMoves =
-                generate_moves(position.get(), PIECE_WHITE, moves.data());
+            int numMoves = generate_moves(&position, PIECE_WHITE, moves.data());
             for (int i = 0; i < numMoves; i++) {
                 Move move = moves[i];
                 if (MOVE_FROM(move) == selectedSq) {

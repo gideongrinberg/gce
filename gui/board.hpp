@@ -4,20 +4,18 @@
 #include "engine.h"
 #include "imgui.h"
 #include "raylib.h"
+#include "window.hpp"
+
 #include <array>
 #include <memory>
 
-class Board {
+class Board : public GuiWindow {
   public:
-    std::unique_ptr<Position> position;
     RenderTexture renderTexture{};
 
-    Board()
-        : position(std::unique_ptr<Position>(position_from_fen(
-              "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"))),
-          selectedSq(-1) {
-        renderTexture = LoadRenderTexture(2048, 2048);
-    }
+    explicit Board(Position &pos)
+        : GuiWindow(pos), selectedSq(-1),
+          renderTexture(LoadRenderTexture(2048, 2048)) {}
 
     void draw() const;
     void update();
