@@ -17,33 +17,7 @@
 #define FILE_A 0x0101010101010101ULL
 #define FILE_H 0x8080808080808080ULL
 
-// Combines all the bitboards of the given color.
-#define GET_COLOR_OCCUPIED(p, color)                                           \
-    ((p)->bitboards[MAKE_PIECE(color, PIECE_PAWN)] |                           \
-     (p)->bitboards[MAKE_PIECE(color, PIECE_KNIGHT)] |                         \
-     (p)->bitboards[MAKE_PIECE(color, PIECE_BISHOP)] |                         \
-     (p)->bitboards[MAKE_PIECE(color, PIECE_ROOK)] |                           \
-     (p)->bitboards[MAKE_PIECE(color, PIECE_QUEEN)] |                          \
-     (p)->bitboards[MAKE_PIECE(color, PIECE_KING)])
-
-#define GET_OCCUPIED(p)                                                        \
-    (GET_COLOR_OCCUPIED((p), PIECE_WHITE) |                                    \
-     GET_COLOR_OCCUPIED((p), PIECE_BLACK))
-
-/**
- * This macro iterates over each set bit in a uint64_t. It is the
- * equivalent of doing the following:
- *     while (bitboard) {
- *      int idx = __builtin_ctzll(bitboard);
- *      // do something with idx
- *      bitboard &= bitboard - 1;
- *     }
- */
-#define FOREACH_SET_BIT(bb, sq)                                                \
-    for (uint64_t _bb = (bb); _bb; _bb &= _bb - 1)                             \
-        for (int sq = __builtin_ctzll(_bb), _once = 1; _once; _once = 0)
-
-Position *position_from_fen(char *fen) {
+Position *position_from_fen(const char *fen) {
     Position *p = calloc(1, sizeof(*p));
     int i = 0;
     int rank = 7, file = 0;

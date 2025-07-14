@@ -3,7 +3,7 @@ project(gce C CXX)
 cmake_policy(SET CMP0169 OLD)
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 set(CMAKE_C_STANDARD 99)
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 
 include(FetchContent)
 
@@ -53,11 +53,14 @@ target_include_directories(imgui PUBLIC
 )
 
 add_library(gce-core STATIC engine/position.c engine/position.h engine/tables.c engine/tables.h
-        engine/engine.h
-        gui/game.cpp
-        gui/game.h)
+        engine/engine.h)
+target_include_directories(gce-core PUBLIC engine/)
 add_executable(gce-gui
         gui/main.cpp
-        gui/game.cpp
-        gui/game.h)
+        gui/board.hpp
+        gui/board.cpp
+        gui/assets.h
+        gui/assets.c
+        gui/textures.h
+        gui/textures.c)
 target_link_libraries(gce-gui PRIVATE gce-core raylib imgui)

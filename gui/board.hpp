@@ -1,0 +1,33 @@
+#ifndef BOARD_HPP
+#define BOARD_HPP
+
+#include "engine.h"
+#include "imgui.h"
+#include "raylib.h"
+#include <array>
+#include <memory>
+
+class Board {
+  public:
+    std::unique_ptr<Position> position;
+    RenderTexture renderTexture{};
+
+    Board()
+        : position(std::unique_ptr<Position>(position_from_fen(
+              "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"))),
+          selectedSq(-1) {
+        renderTexture = LoadRenderTexture(2048, 2048);
+    }
+
+    void draw() const;
+    void update();
+    void render();
+
+  private:
+    std::array<RenderTexture2D, MAX_PIECE> pieceTextures;
+    int selectedSq;
+    uint64_t legalMoves;
+    int getClicked();
+};
+
+#endif // BOARD_HPP

@@ -44,24 +44,55 @@ typedef uint16_t Move;
 /**
  * We encode castling rights as a bitflag.
  */
-typedef uint8_t CastlingRights;
-enum CastlingRights {
-    CASTLE_WHITE_KING = 1,
-    CASTLE_WHITE_QUEEN = 2,
-    CASTLE_BLACK_KING = 4,
-    CASTLE_BLACK_QUEEN = 8,
-
-    CASTLE_ALL = 1 | 2 | 4 | 8,
-    CASTLE_NONE = 0
+#ifdef __cplusplus // necessary for c++ compatibility
+enum class CastlingRights : uint8_t {
+    WHITE_KINGSIDE = 1,
+    WHITE_QUEENSIDE = 2,
+    BLACK_KINGSIDE = 4,
+    BLACK_QUEENSIDE = 8
 };
-
+#else
+typedef uint8_t CastlingRights;
+enum {
+    WHITE_KINGSIDE = 1,
+    WHITE_QUEENSIDE = 2,
+    BLACK_KINGSIDE = 4,
+    BLACK_QUEENSIDE = 8
+};
+#endif
 typedef struct {
     uint64_t bitboards[MAX_PIECE];
     CastlingRights castling_rights;
 } Position;
 
-Position* position_from_fen(char* fen);
+// Combines all the bitboards of the given color.
+#define GET_COLOR_OCCUPIED(p, color)                                           \
+    ((p)->bitboards[MAKE_PIECE(color, PIECE_PAWN)] |                           \
+     (p)->bitboards[MAKE_PIECE(color, PIECE_KNIGHT)] |                         \
+     (p)->bitboards[MAKE_PIECE(color, PIECE_BISHOP)] |                         \
+     (p)->bitboards[MAKE_PIECE(color, PIECE_ROOK)] |                           \
+     (p)->bitboards[MAKE_PIECE(color, PIECE_QUEEN)] |                          \
+     (p)->bitboards[MAKE_PIECE(color, PIECE_KING)])
 
-void print_position(Position* p);
+#define GET_OCCUPIED(p)                                                        \
+    (GET_COLOR_OCCUPIED((p), PIECE_WHITE) |                                    \
+     GET_COLOR_OCCUPIED((p), PIECE_BLACK))
+
+/**
+ * This macro iterates over each set bit in a uint64_t. It is the
+ * equivalent of doing the following:
+ *     while (bitboard) {
+ *      int idx = __builtin_ctzll(bitboard);
+ *      // do something with idx
+ *      bitboard &= bitboard - 1;
+ *     }
+ */
+#define FOREACH_SET_BIT(bb, sq)                                                \
+    for (uint64_t _bb = (bb); _bb; _bb &= _bb - 1)                             \
+        for (int sq = __builtin_ctzll(_bb), _once = 1; _once; _once = 0)
+
+Position *position_from_fen(const char *fen);
+
+void print_position(Position *p);
 int generate_moves(Position *p, int color, Move *arr);
 #endif // POSITION_H
