@@ -3,11 +3,13 @@ This code generates a header with precomputed tables for the chess engine. So fa
 knights and kings on each of the 64 squares of the board, and magic bitboards for sliding pieces.
 """
 
-import time
 import random
+import time
 from pathlib import Path
 
+
 # Offset table generation
+
 
 def generate_knight_moves():
     deltas = [(2, 1), (1, 2), (-1, 2), (-2, 1), (-2, -1), (-1, -2), (1, -2), (2, -1)]
@@ -109,8 +111,8 @@ class Slider:
             magic = sparse_rand()
             for blockers_mask in blockers_list:
                 product = (
-                    blockers_mask * magic
-                ) & 0xFFFFFFFFFFFFFFFF  # truncate to 64 bit
+                                  blockers_mask * magic
+                          ) & 0xFFFFFFFFFFFFFFFF  # truncate to 64 bit
                 idx = product >> (64 - relevant_bits)
                 attack_mask = self.attack_mask(sq, blockers_mask)
                 if idx in table and table[idx] != attack_mask:
@@ -123,20 +125,22 @@ class Slider:
                 return magic, table
 
         raise RuntimeError(
-            f"Exceeded {num_attempts} attempts while generating magic number for {self.name()} square {sq+1}"
+            f"Exceeded {num_attempts} attempts while generating magic number for {self.name()} square {sq + 1}"
         )
 
     def generate_code(self):
+        masks = []
         magics = []
         rel_bits = []
         attack_tables: list[dict[int, int]] = []
 
         for sq in range(64):
             t0 = time.time()
-            print(f"Generating magic bitboards for {self.name()} square {sq+1}")
+            print(f"Generating magic bitboards for {self.name()} square {sq + 1}")
             _, num_rel_bits = self.generate_blockers(sq)
             magic, table = self.generate_magic(sq)
             print(f"Finished in {time.time() - t0} seconds.")
+            masks.append(self.relevance_mask(sq))
             rel_bits.append(num_rel_bits)
             magics.append(magic)
             attack_tables.append(table)
@@ -149,6 +153,10 @@ class Slider:
         code += "\n\n"
 
         code += format_c_array(
+            [format_c_ull(n) for n in masks], f"{self.name()}_blocker_masks", "uint64_t"
+        )
+        code += "\n\n"
+        code += format_c_array(
             [str(n) for n in rel_bits], f"{self.name()}_rel_bits", "uint64_t"
         )
         code += "\n\n"
@@ -157,9 +165,14 @@ class Slider:
             l = [0] * self.max_attacks()
             for k, v in table.items():
                 l[k] = v
-            
+
             l_formatted = "{" + (", ".join([format_c_ull(n) for n in l])) + "}"
-            l_formatted = (' ' * 4) + l_formatted + (',' if i != len(attack_tables) - 1 else '') + "\n"
+            l_formatted = (
+                    (" " * 4)
+                    + l_formatted
+                    + ("," if i != len(attack_tables) - 1 else "")
+                    + "\n"
+            )
             code += l_formatted
         code += "\n};"
         return code
@@ -311,7 +324,7 @@ class Bishop(Slider):
 def format_c_array(array, name, type, static=False, const=True):
     code = f"{'static ' if static else ''}{'const ' if const else ''}{type} {name}[{len(array)}] = {{"
     for i, item in enumerate(array):
-        code += f"\n{' '*4}{item}{',' if i != len(array) - 1 else ''}"
+        code += f"\n{' ' * 4}{item}{',' if i != len(array) - 1 else ''}"
     code += "\n};"
 
     return code
@@ -344,7 +357,7 @@ def main():
 {Bishop().generate_code()}
 """
 
-    with open((Path(__file__).parent / ".." / "tables.c").as_posix(), "w") as f:
+    with open((Path(__file__).parent / ".." / "engine" / "tables.c").as_posix(), "w") as f:
         f.write(code)
 
     # this should probably be part of the code at some point.
@@ -361,13 +374,15 @@ extern const uint64_t king_moves[64];
     for piece in ["rook", "bishop"]:
         header_content += f"extern const uint64_t {piece}_magic_numbers[64];\n"
         header_content += f"extern const uint64_t {piece}_rel_bits[64];\n"
+        header_content += f"extern const uint64_t {piece}_blocker_masks[64];\n"
         n = 4096 if piece == "rook" else 8192
         header_content += f"extern const uint64_t {piece}_attack_tables[64][{n}];\n"
+        header_content += "\n"
 
     header_end = "#endif // TABLES_H"
     header = header_start + "\n" + header_content + "\n" + header_end
 
-    with open((Path(__file__).parent / ".." / "tables.h").as_posix(), "w") as f:
+    with open((Path(__file__).parent / ".." / "engine" / "tables.h").as_posix(), "w") as f:
         f.write(header)
 
 

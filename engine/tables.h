@@ -9,9 +9,12 @@ extern const uint64_t king_moves[64];
 
 extern const uint64_t rook_magic_numbers[64];
 extern const uint64_t rook_rel_bits[64];
+extern const uint64_t rook_blocker_masks[64];
 extern const uint64_t rook_attack_tables[64][4096];
+
 extern const uint64_t bishop_magic_numbers[64];
 extern const uint64_t bishop_rel_bits[64];
+extern const uint64_t bishop_blocker_masks[64];
 extern const uint64_t bishop_attack_tables[64][8192];
 
 #endif // TABLES_H

@@ -116,6 +116,35 @@ void print_position(Position *p) {
     }
 }
 
+// uint64_t get_rook_attacks(uint64_t occupancy, int sq) {
+//     uint64_t blockers = occupancy & rook_blocker_masks[sq];
+//     uint64_t magic = rook_magic_numbers[sq];
+//     int shift = 64 - rook_rel_bits[sq];
+//     uint64_t index = (blockers * magic) >> shift;
+//
+//     return rook_attack_tables[sq][index];
+// }
+
+/**
+ * Since the bishop and rook attack generation are essentially the same, they
+ * can be generated with a macro.
+ */
+#define DEFINE_SLIDER_ATTACK_FN(NAME)                                          \
+    uint64_t get_##NAME##_attacks(uint64_t occupancy, int sq) {                \
+        uint64_t blockers = occupancy & NAME##_blocker_masks[sq];              \
+        uint64_t magic = NAME##_magic_numbers[sq];                             \
+        int shift = 64 - NAME##_rel_bits[sq];                                  \
+        uint64_t index = (blockers * magic) >> shift;                          \
+        return NAME##_attack_tables[sq][index];                                \
+    }
+
+DEFINE_SLIDER_ATTACK_FN(rook)
+DEFINE_SLIDER_ATTACK_FN(bishop)
+uint64_t get_queen_attacks(uint64_t occupancy, int sq) {
+    // a queen is just a bishop and a rook combined
+    return get_bishop_attacks(occupancy, sq) | get_rook_attacks(occupancy, sq);
+}
+
 uint64_t generate_attacks(Position *p, int color) {
     uint64_t attacks = 0;
 
@@ -141,8 +170,8 @@ uint64_t generate_attacks(Position *p, int color) {
     return attacks;
 }
 
-static inline void add_pawn_moves(uint64_t bb, int shift, Move *arr,
-                                  int *moves_count) {
+static void add_pawn_moves(uint64_t bb, int shift, Move *arr,
+                           int *moves_count) {
     while (bb) {
         int to = __builtin_ctzll(bb);
         int from = to - shift;
@@ -158,6 +187,16 @@ static inline void add_pawn_moves(uint64_t bb, int shift, Move *arr,
         bb &= bb - 1;
     }
 }
+
+// A macro for getting the attacks for every sliding piece of a
+// specific type and adding them as legal moves.
+#define ADD_SLIDER_MOVES(piece_bb, get_attacks_fn)                             \
+    FOREACH_SET_BIT(piece_bb, from) {                                          \
+        uint64_t attacks = get_attacks_fn(occupancy, from) & ~own_pieces;      \
+        FOREACH_SET_BIT(attacks, to) {                                         \
+            arr[moves_count++] = ENCODE_MOVE(from, to, 0);                     \
+        }                                                                      \
+    }
 
 int generate_moves(Position *p, int color, Move *arr) {
     int moves_count = 0;
@@ -212,6 +251,11 @@ int generate_moves(Position *p, int color, Move *arr) {
             arr[moves_count++] = ENCODE_MOVE(from, to, 0);
         }
     }
+
+    uint64_t occupancy = own_pieces | opponent_pieces;
+    ADD_SLIDER_MOVES(p->bitboards[color | PIECE_BISHOP], get_bishop_attacks)
+    ADD_SLIDER_MOVES(p->bitboards[color | PIECE_ROOK], get_rook_attacks)
+    ADD_SLIDER_MOVES(p->bitboards[color | PIECE_QUEEN], get_queen_attacks)
 
     return moves_count;
 }
