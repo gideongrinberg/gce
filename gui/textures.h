@@ -3,8 +3,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#include <stdlib.h>
 #include "raylib.h"
+#include <stdlib.h>
 
 void loadPieceTextures(void);
 Texture2D getPieceTexture(uint8_t piece);

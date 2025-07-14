@@ -45,9 +45,10 @@ void Board::draw() const {
                 Texture2D tex = getPieceTexture(color | piece);
                 Rectangle src = {0, 0, static_cast<float>(tex.width),
                                  static_cast<float>(tex.height)};
-                Rectangle dst = {
-                    static_cast<float>(tileSize * x), static_cast<float>(tileSize * y),
-                    static_cast<float>(tileSize), static_cast<float>(tileSize)};
+                Rectangle dst = {static_cast<float>(tileSize * x),
+                                 static_cast<float>(tileSize * y),
+                                 static_cast<float>(tileSize),
+                                 static_cast<float>(tileSize)};
                 Vector2 origin = {0.0f, 0.0f};
                 DrawTexturePro(tex, src, dst, origin, 0.0f, WHITE);
             }
@@ -67,7 +68,8 @@ void Board::update() {
             // update legal moves
             legalMoves = 0;
             std::array<Move, 256> moves = {};
-            int numMoves = generate_moves(position.get(), PIECE_WHITE, moves.data());
+            int numMoves =
+                generate_moves(position.get(), PIECE_WHITE, moves.data());
             for (int i = 0; i < numMoves; i++) {
                 Move move = moves[i];
                 if (MOVE_FROM(move) == selectedSq) {

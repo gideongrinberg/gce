@@ -26,7 +26,8 @@ void loadPieceTextures(void) {
             Image img = LoadImageFromMemory(".png", sources[color][type].data,
                                             sources[color][type].len);
             pieceTextures[color][type] = LoadTextureFromImage(img);
-            SetTextureFilter(pieceTextures[color][type], TEXTURE_FILTER_BILINEAR);
+            SetTextureFilter(pieceTextures[color][type],
+                             TEXTURE_FILTER_BILINEAR);
             UnloadImage(img);
         }
     }

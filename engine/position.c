@@ -1,6 +1,6 @@
-#include <stdio.h>
 #include <ctype.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "position.h"
@@ -126,12 +126,12 @@ uint64_t generate_attacks(Position *p, int color) {
     uint64_t pawns = p->bitboards[color | PIECE_PAWN];
 
     uint64_t left_captures = shift_left >= 0
-                               ? ((pawns & mask_left) << shift_left)
-                               : ((pawns & mask_left) >> -shift_left);
+                                 ? ((pawns & mask_left) << shift_left)
+                                 : ((pawns & mask_left) >> -shift_left);
 
     uint64_t right_captures = shift_right >= 0
-                                ? ((pawns & mask_right) << shift_right)
-                                : ((pawns & mask_right) >> -shift_right);
+                                  ? ((pawns & mask_right) << shift_right)
+                                  : ((pawns & mask_right) >> -shift_right);
 
     attacks |= left_captures | right_captures;
 
@@ -171,8 +171,8 @@ int generate_moves(Position *p, int color, Move *arr) {
         (color == PIECE_WHITE) ? (pawns << 8) & empty : (pawns >> 8) & empty;
     uint64_t rank = (color == PIECE_WHITE) ? RANK_3 : RANK_6;
     uint64_t double_push = (color == PIECE_WHITE)
-                             ? ((single_push & rank) << 8) & empty
-                             : ((single_push & rank) >> 8) & empty;
+                               ? ((single_push & rank) << 8) & empty
+                               : ((single_push & rank) >> 8) & empty;
 
     int push_dir = (color == PIECE_WHITE) ? 8 : -8;
     add_pawn_moves(single_push, push_dir, arr, &moves_count);
