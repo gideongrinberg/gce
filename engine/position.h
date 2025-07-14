@@ -1,12 +1,6 @@
 #ifndef POSITION_H
 #define POSITION_H
-#ifdef __cplusplus
-extern "C" {
-#endif // __cplusplus
-#include <ctype.h>
-#include <stdbool.h>
 #include <stdint.h>
-#include <stdlib.h>
 
 /*
  * The engine represents pieces as 8-bit integers where the
@@ -70,8 +64,4 @@ Position* position_from_fen(char* fen);
 
 void print_position(Position* p);
 int generate_moves(Position *p, int color, Move *arr);
-
-#ifdef __cplusplus
-}
-#endif // __cplusplus
 #endif // POSITION_H

@@ -1,5 +1,9 @@
-#include "position.h"
 #include <stdio.h>
+#include <ctype.h>
+#include <stdbool.h>
+#include <stdlib.h>
+
+#include "position.h"
 #include "tables.h"
 
 // Masks to isolate a specific rank or file of a bitboard

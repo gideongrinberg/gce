@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 11)
 
 include(FetchContent)
 
-# Download and build raylib
+# Download and build dependencies
 FetchContent_Declare(
         raylib
         GIT_REPOSITORY https://github.com/raysan5/raylib.git
@@ -52,7 +52,12 @@ target_include_directories(imgui PUBLIC
         ${raylib_SOURCE_DIR}/src
 )
 
-add_library(gce-core STATIC engine/position.c engine/position.h engine/tables.c engine/tables.h)
+add_library(gce-core STATIC engine/position.c engine/position.h engine/tables.c engine/tables.h
+        engine/engine.h
+        gui/game.cpp
+        gui/game.h)
 add_executable(gce-gui
-        gui/main.cpp)
+        gui/main.cpp
+        gui/game.cpp
+        gui/game.h)
 target_link_libraries(gce-gui PRIVATE gce-core raylib imgui)
