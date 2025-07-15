@@ -89,6 +89,6 @@ typedef struct {
 Position *position_from_fen(const char *fen_string);
 
 void print_position(Position *p);
-int generate_moves(Position *p, Move *output);
+int generate_moves(Position *p, Move *arr);
 void execute_move(Position *p, Move move);
 #endif // POSITION_H

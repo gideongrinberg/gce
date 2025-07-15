@@ -6,6 +6,7 @@
 
 extern const uint64_t knight_moves[64];
 extern const uint64_t king_moves[64];
+extern const uint64_t squares_between[64][64];
 
 extern const uint64_t rook_magic_numbers[64];
 extern const uint64_t rook_rel_bits[64];

@@ -246,18 +246,55 @@ static void add_pawn_moves(uint64_t bb, int shift, Move *arr,
 #define ADD_SLIDER_MOVES(piece_bb, get_attacks_fn)                             \
     FOREACH_SET_BIT(piece_bb, from) {                                          \
         uint64_t attacks = get_attacks_fn(occupancy, from) & ~own_pieces;      \
+        if (pinned_pieces & (1ULL << from)) {                                  \
+            attacks &= pin_rays[from];                                         \
+        }                                                                      \
         FOREACH_SET_BIT(attacks, to) {                                         \
             arr[moves_count++] = ENCODE_MOVE(from, to, 0);                     \
         }                                                                      \
     }
 
-int generate_moves(Position *p, Move *output) {
-    Move arr[256];
+static bool are_aligned(int king_sq, int slider_sq, int piece_type) {
+    switch (piece_type) {
+    case PIECE_BISHOP:
+        return get_bishop_attacks(0ULL, slider_sq) & (1ULL << king_sq);
+    case PIECE_ROOK:
+        return get_rook_attacks(0ULL, slider_sq) & (1ULL << king_sq);
+    case PIECE_QUEEN:
+        return get_queen_attacks(0ULL, slider_sq) & (1ULL << king_sq);
+    default:
+        return false;
+    }
+}
+
+#define DETECT_PINS(piece_type, enemy_bb, piece_name)                          \
+    FOREACH_SET_BIT(enemy_bb, piece_name) {                                    \
+        if (are_aligned(king, piece_name, piece_type)) {                       \
+            uint64_t between = squares_between[king][piece_name];              \
+            uint64_t blockers = between & own_pieces;                          \
+            if (__builtin_popcountll(blockers) == 1) {                         \
+                pinned_pieces |= blockers;                                     \
+                pin_rays[__builtin_ctzll(blockers)] &=                         \
+                    (1ULL << piece_name) | between;                            \
+            }                                                                  \
+        }                                                                      \
+    }
+
+int generate_moves(Position *p, Move *arr) {
     int moves_count = 0;
     int color = p->moves % 2 == 0 ? PIECE_WHITE : PIECE_BLACK;
+    int opp = color ^ 8;
     uint64_t own_pieces = GET_COLOR_OCCUPIED(p, color);
     uint64_t opponent_pieces = GET_COLOR_OCCUPIED(p, color ^ 8);
     uint64_t opponent_attacks = generate_attacks(p, color ^ 8);
+    uint64_t pinned_pieces = 0;
+    uint64_t pin_rays[64] = {0};
+
+    // Generate pins
+    int king = __builtin_ctzll(p->bitboards[color | PIECE_KING]);
+    DETECT_PINS(PIECE_BISHOP, p->bitboards[opp | PIECE_BISHOP], bishop)
+    DETECT_PINS(PIECE_ROOK, p->bitboards[opp | PIECE_ROOK], rook)
+    DETECT_PINS(PIECE_QUEEN, p->bitboards[opp | PIECE_QUEEN], queen)
 
     // Generate pawn moves
     uint64_t pawns = p->bitboards[color | PIECE_PAWN];
@@ -274,6 +311,7 @@ int generate_moves(Position *p, Move *output) {
     add_pawn_moves(double_push, 2 * push_dir, arr, &moves_count);
 
     // Generate pawn captures
+    // todo: detect pins
     int shift_left = (color == PIECE_WHITE) ? 7 : -9;
     int shift_right = (color == PIECE_WHITE) ? 9 : -7;
     uint64_t mask_left = ~FILE_A;
@@ -295,13 +333,14 @@ int generate_moves(Position *p, Move *output) {
 
     uint64_t knights = p->bitboards[MAKE_PIECE(color, PIECE_KNIGHT)];
     FOREACH_SET_BIT(knights, from) {
-        uint64_t attacks = knight_moves[from] & ~(own_pieces);
-        FOREACH_SET_BIT(attacks, to) {
-            arr[moves_count++] = ENCODE_MOVE(from, to, 0);
+        if (!(pinned_pieces & (1ULL << from))) {
+            uint64_t attacks = knight_moves[from] & ~(own_pieces);
+            FOREACH_SET_BIT(attacks, to) {
+                arr[moves_count++] = ENCODE_MOVE(from, to, 0);
+            }
         }
     }
 
-    uint64_t king = __builtin_ctzll(p->bitboards[color | PIECE_KING]);
     uint64_t king_squares = king_moves[king] & ~own_pieces & ~opponent_attacks;
     FOREACH_SET_BIT(king_squares, to) {
         arr[moves_count++] = ENCODE_MOVE(king, to, 0);
@@ -335,17 +374,7 @@ int generate_moves(Position *p, Move *output) {
     ADD_SLIDER_MOVES(p->bitboards[color | PIECE_ROOK], get_rook_attacks)
     ADD_SLIDER_MOVES(p->bitboards[color | PIECE_QUEEN], get_queen_attacks)
 
-    // todo: replace with pin detection
-    int legal_moves = 0;
-    for (int i = 0; i < moves_count; i++) {
-        Position copy = *p;
-        execute_move(&copy, arr[i]);
-        uint64_t attacks = generate_attacks(&copy, color ^ 8);
-        if (!(copy.bitboards[PIECE_KING | color] & attacks)) {
-            output[legal_moves++] = arr[i];
-        }
-    }
-    return legal_moves;
+    return moves_count;
 }
 
 void execute_move(Position *p, Move move) {

@@ -318,6 +318,64 @@ class Bishop(Slider):
         return attacks
 
 
+# Pin tables
+def squares_between(sq1, sq2):
+    if sq1 == sq2:
+        return 0
+
+    rank1, file1 = sq1 // 8, sq1 % 8
+    rank2, file2 = sq2 // 8, sq2 % 8
+
+    bb = 0
+
+    if rank1 == rank2:
+        direction = 1 if file2 > file1 else -1
+        f = file1
+        while f != file2:
+            f += direction
+            if f != file2:
+                bb |= 1 << (rank1 * 8 + f)
+
+    elif file1 == file2:
+        direction = 1 if rank2 > rank1 else -1
+        r = rank1
+        while r != rank2:
+            r += direction
+            if r != rank2:
+                bb |= 1 << (r * 8 + file1)
+
+    elif (rank2 - rank1) == (file2 - file1):  # Main diagonal
+        step = 9 if sq2 > sq1 else -9
+        s = sq1 + step
+        while s != sq2:
+            bb |= 1 << s
+            s += step
+
+    elif (file1 + rank1) == (file2 + rank2):  # Anti-diagonal
+        step = 7 if sq2 > sq1 else -7
+        s = sq1 + step
+        while s != sq2:
+            bb |= 1 << s
+            s += step
+
+    return bb
+
+
+def generate_pin_tables():
+    tables = []
+    for i in range(64):
+        tables.append([])
+        for j in range(64):
+            tables[i].append(format_c_ull(squares_between(i, j)))
+
+    arr = ["{" + (",".join(table)) + "}" for table in tables]
+    code = "const uint64_t squares_between[64][64] = {"
+    for i, item in enumerate(arr):
+        code += f"\n{' ' * 4}{item}{',' if i != len(arr) - 1 else ''}"
+    code += "\n};"
+    return code
+
+
 # Utility functions
 
 
@@ -342,6 +400,10 @@ def print_bitboard(bb):
         print()
 
 
+def u64(n):
+    return n & 0xFFFFFFFFFFFFFFFF
+
+
 def main():
     random.seed(42)
     print("Seeding random with value 42")
@@ -351,6 +413,8 @@ def main():
 {generate_knight_moves()}
 
 {generate_king_moves()}
+
+{generate_pin_tables()}
 
 {Rook().generate_code()}
 
@@ -369,6 +433,8 @@ def main():
 
 extern const uint64_t knight_moves[64];
 extern const uint64_t king_moves[64];
+extern const uint64_t squares_between[64][64];
+
 """
     header_content = ""
     for piece in ["rook", "bishop"]:
