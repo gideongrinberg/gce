@@ -306,6 +306,29 @@ int generate_moves(Position *p, Move *arr) {
         arr[moves_count++] = ENCODE_MOVE(king, to, 0);
     }
 
+    uint64_t castle_mask = own_pieces | opponent_pieces | opponent_attacks;
+    if (color == PIECE_WHITE && !(opponent_attacks & (1ULL << king))) {
+        if ((p->castling_rights & WHITE_KINGSIDE) &&
+            !(castle_mask & ((1ULL << 5) | (1ULL << 6)))) {
+            arr[moves_count++] = ENCODE_MOVE(king, SQUARE_INDEX('g', '1'), 0);
+        }
+
+        if ((p->castling_rights & WHITE_QUEENSIDE) &&
+            !(castle_mask & ((1ULL << 1) | (1ULL << 2) | (1ULL << 3)))) {
+            arr[moves_count++] = ENCODE_MOVE(king, SQUARE_INDEX('c', '1'), 0);
+        }
+    } else if (color == PIECE_BLACK && !(opponent_attacks & (1ULL << king))) {
+        if ((p->castling_rights & BLACK_KINGSIDE) &&
+            !(castle_mask & ((1ULL << 61) | (1ULL << 62)))) {
+            arr[moves_count++] = ENCODE_MOVE(king, SQUARE_INDEX('g', '8'), 0);
+        }
+
+        if ((p->castling_rights & BLACK_QUEENSIDE) &&
+            !(castle_mask & ((1ULL << 57) | (1ULL << 58) | (1ULL << 59)))) {
+            arr[moves_count++] = ENCODE_MOVE(king, SQUARE_INDEX('c', '8'), 0);
+        }
+    }
+
     uint64_t occupancy = own_pieces | opponent_pieces;
     ADD_SLIDER_MOVES(p->bitboards[color | PIECE_BISHOP], get_bishop_attacks)
     ADD_SLIDER_MOVES(p->bitboards[color | PIECE_ROOK], get_rook_attacks)
@@ -324,6 +347,38 @@ void execute_move(Position *p, Move move) {
 
     uint64_t from_bb = 1ULL << MOVE_FROM(move);
     uint64_t to_bb = 1ULL << MOVE_TO(move);
+    // handle castling
+    if (p->bitboards[color | PIECE_KING] & from_bb) {
+        moving_piece = PIECE_KING;
+        switch (color) {
+        case PIECE_WHITE:
+            switch (move) {
+            case ENCODE_MOVE(4, 6, 0): // e1 -> g1
+                p->bitboards[PIECE_WHITE | PIECE_ROOK] &= ~(1ULL << 7);
+                p->bitboards[PIECE_WHITE | PIECE_ROOK] |= (1ULL << 5);
+                p->bitboards[PIECE_WHITE | PIECE_KING] = (1ULL << 6);
+                goto end;
+            case ENCODE_MOVE(4, 2, 0):
+                p->bitboards[PIECE_WHITE | PIECE_ROOK] &= ~(1ULL << 0);
+                p->bitboards[PIECE_WHITE | PIECE_ROOK] |= (1ULL << 3);
+                p->bitboards[PIECE_WHITE | PIECE_KING] = (1ULL << 2);
+                goto end;
+            }
+        case PIECE_BLACK:
+            switch (move) {
+            case ENCODE_MOVE(60, 58, 0):
+                p->bitboards[PIECE_BLACK | PIECE_ROOK] &= ~(1ULL << 56);
+                p->bitboards[PIECE_BLACK | PIECE_ROOK] |= (1ULL << 59);
+                p->bitboards[PIECE_BLACK | PIECE_KING] = (1ULL << 58);
+                goto end;
+            case ENCODE_MOVE(60, 62, 0):
+                p->bitboards[PIECE_BLACK | PIECE_ROOK] &= ~(1ULL << 63);
+                p->bitboards[PIECE_BLACK | PIECE_ROOK] |= (1ULL << 61);
+                p->bitboards[PIECE_BLACK | PIECE_KING] = (1ULL << 62);
+                goto end;
+            }
+        }
+    }
 
     // find the piece
     for (int i = 0; i < 6; i++) {
@@ -344,28 +399,75 @@ void execute_move(Position *p, Move move) {
         p->bitboards[MOVE_PROMO(move) | color] |= to_bb;
     }
 
-    // remove captured
+    // handle capture
     bool capture = false;
+    // ep capture
     if (moving_piece == PIECE_PAWN && to_bb == p->en_passant) {
         capture = true;
         int capture_sq =
             (color == PIECE_WHITE) ? MOVE_TO(move) - 8 : MOVE_TO(move) + 8;
         p->bitboards[opp | PIECE_PAWN] &= ~(1ULL << capture_sq);
-    } else {
+    } else { // regular capture
         for (int i = 0; i < 6; i++) {
             if (p->bitboards[opp | i] & to_bb) {
                 p->bitboards[opp | i] &= ~to_bb;
                 capture = true;
+                // update castling rights when rook is captured
+                if (i == PIECE_ROOK) {
+                    switch (MOVE_TO(move)) {
+                    case SQUARE_INDEX('a', '1'):
+                        p->castling_rights &= ~WHITE_QUEENSIDE;
+                        break;
+                    case SQUARE_INDEX('h', '1'):
+                        p->castling_rights &= ~WHITE_KINGSIDE;
+                        break;
+                    case SQUARE_INDEX('h', '8'):
+                        p->castling_rights &= ~BLACK_KINGSIDE;
+                        break;
+                    case SQUARE_INDEX('a', '8'):
+                        p->castling_rights &= ~BLACK_QUEENSIDE;
+                        break;
+                    }
+                }
                 break;
             }
         }
     }
 
+end: // cleanup
+    // update en passant
     if (moving_piece == PIECE_PAWN &&
         abs(MOVE_TO(move) - MOVE_FROM(move)) == 16) {
         p->en_passant = 1ULL << ((MOVE_FROM(move) + MOVE_TO(move)) / 2);
     } else {
         p->en_passant = 0;
+    }
+
+    // update castling rights
+    if (moving_piece == PIECE_KING) {
+        switch (color) {
+        case PIECE_WHITE:
+            p->castling_rights &= ~(WHITE_KINGSIDE | WHITE_QUEENSIDE);
+            break;
+        case PIECE_BLACK:
+            p->castling_rights &= ~(BLACK_KINGSIDE | BLACK_QUEENSIDE);
+            break;
+        }
+    } else if (moving_piece == PIECE_ROOK) {
+        switch (MOVE_FROM(move)) {
+        case SQUARE_INDEX('a', '1'):
+            p->castling_rights &= ~WHITE_QUEENSIDE;
+            break;
+        case SQUARE_INDEX('h', '1'):
+            p->castling_rights &= ~WHITE_KINGSIDE;
+            break;
+        case SQUARE_INDEX('h', '8'):
+            p->castling_rights &= ~BLACK_KINGSIDE;
+            break;
+        case SQUARE_INDEX('a', '8'):
+            p->castling_rights &= ~BLACK_QUEENSIDE;
+            break;
+        }
     }
 
     p->moves++;
