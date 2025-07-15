@@ -183,8 +183,8 @@ uint64_t generate_attacks(Position *p, int color) {
     // Generate pawn attacks
     int shift_left = (color == PIECE_WHITE) ? 7 : -9;
     int shift_right = (color == PIECE_WHITE) ? 9 : -7;
-    uint64_t mask_left = (color == PIECE_BLACK) ? ~FILE_H : ~FILE_A;
-    uint64_t mask_right = (color == PIECE_BLACK) ? ~FILE_A : ~FILE_H;
+    uint64_t mask_left = ~FILE_A;
+    uint64_t mask_right = ~FILE_H;
     uint64_t pawns = p->bitboards[color | PIECE_PAWN];
 
     uint64_t left_captures = shift_left >= 0
@@ -251,7 +251,8 @@ static void add_pawn_moves(uint64_t bb, int shift, Move *arr,
         }                                                                      \
     }
 
-int generate_moves(Position *p, Move *arr) {
+int generate_moves(Position *p, Move *output) {
+    Move arr[256];
     int moves_count = 0;
     int color = p->moves % 2 == 0 ? PIECE_WHITE : PIECE_BLACK;
     uint64_t own_pieces = GET_COLOR_OCCUPIED(p, color);
@@ -275,8 +276,8 @@ int generate_moves(Position *p, Move *arr) {
     // Generate pawn captures
     int shift_left = (color == PIECE_WHITE) ? 7 : -9;
     int shift_right = (color == PIECE_WHITE) ? 9 : -7;
-    uint64_t mask_left = (color == PIECE_BLACK) ? ~FILE_H : ~FILE_A;
-    uint64_t mask_right = (color == PIECE_BLACK) ? ~FILE_A : ~FILE_H;
+    uint64_t mask_left = ~FILE_A;
+    uint64_t mask_right = ~FILE_H;
     pawns = p->bitboards[color | PIECE_PAWN];
 
     uint64_t capture_mask = opponent_pieces | p->en_passant;
@@ -334,7 +335,17 @@ int generate_moves(Position *p, Move *arr) {
     ADD_SLIDER_MOVES(p->bitboards[color | PIECE_ROOK], get_rook_attacks)
     ADD_SLIDER_MOVES(p->bitboards[color | PIECE_QUEEN], get_queen_attacks)
 
-    return moves_count;
+    // todo: replace with pin detection
+    int legal_moves = 0;
+    for (int i = 0; i < moves_count; i++) {
+        Position copy = *p;
+        execute_move(&copy, arr[i]);
+        uint64_t attacks = generate_attacks(&copy, color ^ 8);
+        if (!(copy.bitboards[PIECE_KING | color] & attacks)) {
+            output[legal_moves++] = arr[i];
+        }
+    }
+    return legal_moves;
 }
 
 void execute_move(Position *p, Move move) {
