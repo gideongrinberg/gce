@@ -26,7 +26,6 @@ void loadPieceTextures(void) {
 
     for (int color = 0; color < 2; color++) {
         for (int type = 0; type < 6; type++) {
-            printf("Loading texture: color %d, type %d\n", color, type);
             Image img = LoadImageFromMemory(".png", sources[color][type].data,
                                             sources[color][type].len);
             pieceTextures[color][type] = LoadTextureFromImage(img);

@@ -203,11 +203,6 @@ int generate_moves(Position *p, int color, Move *arr) {
     uint64_t own_pieces = GET_COLOR_OCCUPIED(p, color);
     uint64_t opponent_pieces = GET_COLOR_OCCUPIED(p, color ^ 8);
 
-    printf("Pawns: 0x%016llx\n", p->bitboards[color | PIECE_PAWN]);
-    printf("Occupied: 0x%016llx\n", GET_OCCUPIED(p));
-    printf("Own pieces: 0x%016llx\n", own_pieces);
-    printf("Opponent pieces: 0x%016llx\n", opponent_pieces);
-
     // Generate pawn moves
     uint64_t pawns = p->bitboards[color | PIECE_PAWN];
     uint64_t empty = ~GET_OCCUPIED(p);
@@ -221,8 +216,6 @@ int generate_moves(Position *p, int color, Move *arr) {
     int push_dir = (color == PIECE_WHITE) ? 8 : -8;
     add_pawn_moves(single_push, push_dir, arr, &moves_count);
     add_pawn_moves(double_push, 2 * push_dir, arr, &moves_count);
-    printf("single_push: 0x%016llx\n", single_push);
-    printf("double_push: 0x%016llx\n", double_push);
 
     // Generate pawn captures
     int shift_left = (color == PIECE_WHITE) ? 7 : -9;
