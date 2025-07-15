@@ -148,6 +148,7 @@ uint64_t get_queen_attacks(uint64_t occupancy, int sq) {
 uint64_t generate_attacks(Position *p, int color) {
     uint64_t attacks = 0;
 
+    // Generate pawn attacks
     int shift_left = (color == PIECE_WHITE) ? 7 : -9;
     int shift_right = (color == PIECE_WHITE) ? 9 : -7;
     uint64_t mask_left = (color == PIECE_WHITE) ? ~FILE_H : ~FILE_A;
@@ -164,8 +165,28 @@ uint64_t generate_attacks(Position *p, int color) {
 
     attacks |= left_captures | right_captures;
 
-    uint64_t knights = p->bitboards[MAKE_PIECE(color, PIECE_KNIGHT)];
-    FOREACH_SET_BIT(knights, from) { attacks |= knight_moves[from]; }
+    // Knights and kings
+    FOREACH_SET_BIT(p->bitboards[color | PIECE_KNIGHT], from) {
+        attacks |= knight_moves[from];
+    }
+
+    FOREACH_SET_BIT(p->bitboards[color | PIECE_KING], from) {
+        attacks |= king_moves[from];
+    }
+
+    // Sliders
+    uint64_t occupied = GET_OCCUPIED(p);
+    FOREACH_SET_BIT(p->bitboards[color | PIECE_QUEEN], queen) {
+        attacks |= get_queen_attacks(occupied, queen);
+    }
+
+    FOREACH_SET_BIT(p->bitboards[color | PIECE_BISHOP], bishop) {
+        attacks |= get_bishop_attacks(occupied, bishop);
+    }
+
+    FOREACH_SET_BIT(p->bitboards[color | PIECE_ROOK], rook) {
+        attacks |= get_queen_attacks(occupied, rook);
+    }
 
     return attacks;
 }
@@ -202,6 +223,7 @@ int generate_moves(Position *p, int color, Move *arr) {
     int moves_count = 0;
     uint64_t own_pieces = GET_COLOR_OCCUPIED(p, color);
     uint64_t opponent_pieces = GET_COLOR_OCCUPIED(p, color ^ 8);
+    uint64_t opponent_attacks = generate_attacks(p, color ^ 8);
 
     // Generate pawn moves
     uint64_t pawns = p->bitboards[color | PIECE_PAWN];
@@ -243,6 +265,12 @@ int generate_moves(Position *p, int color, Move *arr) {
         FOREACH_SET_BIT(attacks, to) {
             arr[moves_count++] = ENCODE_MOVE(from, to, 0);
         }
+    }
+
+    uint64_t king = __builtin_ctzll(p->bitboards[color | PIECE_KING]);
+    uint64_t king_squares = king_moves[king] & ~own_pieces & ~opponent_attacks;
+    FOREACH_SET_BIT(king_squares, to) {
+        arr[moves_count++] = ENCODE_MOVE(king, to, 0);
     }
 
     uint64_t occupancy = own_pieces | opponent_pieces;
