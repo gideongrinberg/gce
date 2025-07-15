@@ -44,14 +44,6 @@ typedef uint16_t Move;
 /**
  * We encode castling rights as a bitflag.
  */
-#ifdef __cplusplus // necessary for c++ compatibility
-enum class CastlingRights : uint8_t {
-    WHITE_KINGSIDE = 1,
-    WHITE_QUEENSIDE = 2,
-    BLACK_KINGSIDE = 4,
-    BLACK_QUEENSIDE = 8
-};
-#else
 typedef uint8_t CastlingRights;
 enum {
     WHITE_KINGSIDE = 1,
@@ -59,10 +51,13 @@ enum {
     BLACK_KINGSIDE = 4,
     BLACK_QUEENSIDE = 8
 };
-#endif
+
 typedef struct {
     uint64_t bitboards[MAX_PIECE];
+    uint64_t en_passant;
     CastlingRights castling_rights;
+    int moves;
+    int halfmoves;
 } Position;
 
 // Combines all the bitboards of the given color.
@@ -91,8 +86,9 @@ typedef struct {
     for (uint64_t _bb = (bb); _bb; _bb &= _bb - 1)                             \
         for (int sq = __builtin_ctzll(_bb), _once = 1; _once; _once = 0)
 
-Position *position_from_fen(const char *fen);
+Position *position_from_fen(const char *fen_string);
 
 void print_position(Position *p);
-int generate_moves(Position *p, int color, Move *arr);
+int generate_moves(Position *p, Move *arr);
+void execute_move(Position *p, Move move);
 #endif // POSITION_H

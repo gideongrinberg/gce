@@ -40,7 +40,6 @@ Texture2D getPieceTexture(uint8_t piece) {
     int type = PIECE_TYPE(piece);
     int color = PIECE_COLOR(piece);
     int color_idx = (color == PIECE_BLACK) ? 1 : 0;
-    printf("type: %d, color: %d, color_idx: %d\n", type, color, color_idx);
     assert(type >= 0 && type < 6);
     assert(color_idx == 0 || color_idx == 1);
     return pieceTextures[color_idx][type];

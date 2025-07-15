@@ -56,6 +56,9 @@ add_library(gce-core STATIC engine/position.c engine/position.h engine/tables.c 
         engine/engine.h)
 target_include_directories(gce-core PUBLIC engine/)
 
+add_executable(gce-perft perft/main.c)
+target_link_libraries(gce-perft gce-core)
+
 add_executable(gce-gui
         gui/main.cpp
         gui/board.hpp

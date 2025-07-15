@@ -9,13 +9,21 @@
 #include <array>
 #include <memory>
 
+struct PendingPromotion {
+    int from;
+    int to;
+    bool display;
+};
+
 class Board : public GuiWindow {
   public:
     RenderTexture renderTexture{};
 
     explicit Board(Position &pos)
         : GuiWindow(pos), selectedSq(-1),
-          renderTexture(LoadRenderTexture(2048, 2048)) {}
+          renderTexture(LoadRenderTexture(2048, 2048)) {
+        pendingPromo.display = false;
+    }
 
     void draw() const;
     void update();
@@ -25,6 +33,8 @@ class Board : public GuiWindow {
     std::array<RenderTexture2D, MAX_PIECE> pieceTextures;
     int selectedSq;
     uint64_t legalMoves;
+    uint64_t promoMoves;
+    PendingPromotion pendingPromo;
     int getClicked();
 };
 

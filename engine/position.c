@@ -6,6 +6,8 @@
 #include "position.h"
 #include "tables.h"
 
+#include <string.h>
+
 // Masks to isolate a specific rank or file of a bitboard
 #define RANK_2 0x000000000000FF00ULL
 #define RANK_3 0x0000000000FF0000ULL
@@ -17,11 +19,17 @@
 #define FILE_A 0x0101010101010101ULL
 #define FILE_H 0x8080808080808080ULL
 
-Position *position_from_fen(const char *fen) {
+#define SQUARE_INDEX(file_char, rank_char)                                     \
+    (((rank_char - '1') * 8) + (file_char - 'a'))
+
+Position *position_from_fen(const char *fen_string) {
+    char fen_str[256];
+    strcpy(fen_str, fen_string);
+
     Position *p = calloc(1, sizeof(*p));
-    int i = 0;
+    const char *fen = strtok(fen_str, " ");
     int rank = 7, file = 0;
-    while (fen[i] != ' ') {
+    for (int i = 0; fen[i] != '\0'; i++) {
         char c = fen[i];
         if (isalpha(c)) {
             bool white = false;
@@ -61,10 +69,43 @@ Position *position_from_fen(const char *fen) {
             rank--;
             file = 0;
         }
-
-        i++;
     }
 
+    // skip color to move (implied by move count)
+    const char *side_to_move = strtok(NULL, " ");
+    fen = strtok(NULL, " ");
+    if (fen == "-") {
+        p->castling_rights = 0;
+    } else {
+        for (int i = 0; fen[i] != '\0'; i++) {
+            switch (fen[i]) {
+            case 'K':
+                p->castling_rights |= WHITE_KINGSIDE;
+                break;
+            case 'Q':
+                p->castling_rights |= WHITE_QUEENSIDE;
+                break;
+            case 'k':
+                p->castling_rights |= BLACK_KINGSIDE;
+                break;
+            case 'q':
+                p->castling_rights |= BLACK_QUEENSIDE;
+                break;
+            }
+        }
+    }
+
+    fen = strtok(NULL, " ");
+    // todo: en passant
+
+    fen = strtok(NULL, " ");
+    int halfmove = atoi(fen);
+    p->halfmoves = halfmove;
+
+    fen = strtok(NULL, " ");
+    int moves = atoi(fen);
+    p->moves = (moves - 1) * 2 + (strcmp(side_to_move, "b") == 0 ? 1 : 0);
+    p->en_passant = 0;
     return p;
 }
 
@@ -116,15 +157,6 @@ void print_position(Position *p) {
     }
 }
 
-// uint64_t get_rook_attacks(uint64_t occupancy, int sq) {
-//     uint64_t blockers = occupancy & rook_blocker_masks[sq];
-//     uint64_t magic = rook_magic_numbers[sq];
-//     int shift = 64 - rook_rel_bits[sq];
-//     uint64_t index = (blockers * magic) >> shift;
-//
-//     return rook_attack_tables[sq][index];
-// }
-
 /**
  * Since the bishop and rook attack generation are essentially the same, they
  * can be generated with a macro.
@@ -151,8 +183,8 @@ uint64_t generate_attacks(Position *p, int color) {
     // Generate pawn attacks
     int shift_left = (color == PIECE_WHITE) ? 7 : -9;
     int shift_right = (color == PIECE_WHITE) ? 9 : -7;
-    uint64_t mask_left = (color == PIECE_WHITE) ? ~FILE_H : ~FILE_A;
-    uint64_t mask_right = (color == PIECE_WHITE) ? ~FILE_A : ~FILE_H;
+    uint64_t mask_left = (color == PIECE_BLACK) ? ~FILE_H : ~FILE_A;
+    uint64_t mask_right = (color == PIECE_BLACK) ? ~FILE_A : ~FILE_H;
     uint64_t pawns = p->bitboards[color | PIECE_PAWN];
 
     uint64_t left_captures = shift_left >= 0
@@ -185,7 +217,7 @@ uint64_t generate_attacks(Position *p, int color) {
     }
 
     FOREACH_SET_BIT(p->bitboards[color | PIECE_ROOK], rook) {
-        attacks |= get_queen_attacks(occupied, rook);
+        attacks |= get_rook_attacks(occupied, rook);
     }
 
     return attacks;
@@ -219,8 +251,9 @@ static void add_pawn_moves(uint64_t bb, int shift, Move *arr,
         }                                                                      \
     }
 
-int generate_moves(Position *p, int color, Move *arr) {
+int generate_moves(Position *p, Move *arr) {
     int moves_count = 0;
+    int color = p->moves % 2 == 0 ? PIECE_WHITE : PIECE_BLACK;
     uint64_t own_pieces = GET_COLOR_OCCUPIED(p, color);
     uint64_t opponent_pieces = GET_COLOR_OCCUPIED(p, color ^ 8);
     uint64_t opponent_attacks = generate_attacks(p, color ^ 8);
@@ -242,19 +275,19 @@ int generate_moves(Position *p, int color, Move *arr) {
     // Generate pawn captures
     int shift_left = (color == PIECE_WHITE) ? 7 : -9;
     int shift_right = (color == PIECE_WHITE) ? 9 : -7;
-    uint64_t mask_left = (color == PIECE_WHITE) ? ~FILE_H : ~FILE_A;
-    uint64_t mask_right = (color == PIECE_WHITE) ? ~FILE_A : ~FILE_H;
+    uint64_t mask_left = (color == PIECE_BLACK) ? ~FILE_H : ~FILE_A;
+    uint64_t mask_right = (color == PIECE_BLACK) ? ~FILE_A : ~FILE_H;
     pawns = p->bitboards[color | PIECE_PAWN];
 
+    uint64_t capture_mask = opponent_pieces | p->en_passant;
     uint64_t left_captures =
-        shift_left >= 0
-            ? ((pawns & mask_left) << shift_left) & opponent_pieces
-            : ((pawns & mask_left) >> -shift_left) & opponent_pieces;
+        shift_left >= 0 ? ((pawns & mask_left) << shift_left) & capture_mask
+                        : ((pawns & mask_left) >> -shift_left) & capture_mask;
 
     uint64_t right_captures =
         shift_right >= 0
-            ? ((pawns & mask_right) << shift_right) & opponent_pieces
-            : ((pawns & mask_right) >> -shift_right) & opponent_pieces;
+            ? ((pawns & mask_right) << shift_right) & capture_mask
+            : ((pawns & mask_right) >> -shift_right) & capture_mask;
 
     add_pawn_moves(left_captures, shift_left, arr, &moves_count);
     add_pawn_moves(right_captures, shift_right, arr, &moves_count);
@@ -279,4 +312,66 @@ int generate_moves(Position *p, int color, Move *arr) {
     ADD_SLIDER_MOVES(p->bitboards[color | PIECE_QUEEN], get_queen_attacks)
 
     return moves_count;
+}
+
+void execute_move(Position *p, Move move) {
+    int color = (GET_COLOR_OCCUPIED(p, PIECE_WHITE) & (1ULL << MOVE_FROM(move)))
+                    ? PIECE_WHITE
+                    : PIECE_BLACK;
+
+    int opp = color ^ 8;
+    int moving_piece = -1;
+
+    uint64_t from_bb = 1ULL << MOVE_FROM(move);
+    uint64_t to_bb = 1ULL << MOVE_TO(move);
+
+    // find the piece
+    for (int i = 0; i < 6; i++) {
+        if (p->bitboards[color | i] & from_bb) {
+            moving_piece = i;
+            break;
+        }
+    }
+
+    if (moving_piece == -1) {
+        return;
+    }
+
+    p->bitboards[moving_piece | color] &= ~from_bb;
+    if (MOVE_PROMO(move) == 0) {
+        p->bitboards[moving_piece | color] |= to_bb;
+    } else {
+        p->bitboards[MOVE_PROMO(move) | color] |= to_bb;
+    }
+
+    // remove captured
+    bool capture = false;
+    if (moving_piece == PIECE_PAWN && to_bb == p->en_passant) {
+        capture = true;
+        int capture_sq =
+            (color == PIECE_WHITE) ? MOVE_TO(move) - 8 : MOVE_TO(move) + 8;
+        p->bitboards[opp | PIECE_PAWN] &= ~(1ULL << capture_sq);
+    } else {
+        for (int i = 0; i < 6; i++) {
+            if (p->bitboards[opp | i] & to_bb) {
+                p->bitboards[opp | i] &= ~to_bb;
+                capture = true;
+                break;
+            }
+        }
+    }
+
+    if (moving_piece == PIECE_PAWN &&
+        abs(MOVE_TO(move) - MOVE_FROM(move)) == 16) {
+        p->en_passant = 1ULL << ((MOVE_FROM(move) + MOVE_TO(move)) / 2);
+    } else {
+        p->en_passant = 0;
+    }
+
+    p->moves++;
+    if (!capture && moving_piece != PIECE_PAWN) {
+        p->halfmoves++;
+    } else {
+        p->halfmoves = 0;
+    }
 }

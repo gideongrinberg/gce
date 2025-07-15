@@ -25,9 +25,8 @@ void Board::draw() const {
     }
 
     FOREACH_SET_BIT(legalMoves, sq) {
-        std::cout << sq << std::endl;
         Vector2 pos = squareToScreen(sq, tileSize);
-        DrawRectangle(pos.x, pos.y, tileSize, tileSize, SELECTED_COLOR);
+        DrawRectangle(pos.x, pos.y, tileSize, tileSize, LEGAL_COLOR);
     }
 
     // draw pieces
@@ -57,25 +56,65 @@ void Board::draw() const {
 
 void Board::update() {
     int clicked = getClicked();
+    if (ImGui::BeginPopupModal("Promo", &pendingPromo.display,
+                               ImGuiWindowFlags_AlwaysAutoResize |
+                                   ImGuiWindowFlags_NoDocking)) {
+        std::cout << "displaying modal" << std::endl;
+
+        ImGui::Text("Choose promotion piece:");
+        static int promotionChoice = 0;
+        if (ImGui::RadioButton("Knight", promotionChoice == 1))
+            promotionChoice = 1;
+        if (ImGui::RadioButton("Bishop", promotionChoice == 2))
+            promotionChoice = 2;
+        if (ImGui::RadioButton("Rook", promotionChoice == 3))
+            promotionChoice = 3;
+        if (ImGui::RadioButton("Queen", promotionChoice == 4))
+            promotionChoice = 4;
+        if (ImGui::Button("Ok")) {
+            execute_move(&position,
+                         ENCODE_MOVE(pendingPromo.from, pendingPromo.to,
+                                     promotionChoice));
+            pendingPromo.display = false;
+            selectedSq = -1;
+            legalMoves = 0;
+            promoMoves = 0;
+        }
+        ImGui::EndPopup();
+    }
+
     if (clicked != -1) {
+        int sideToMove = position.moves % 2 == 0 ? PIECE_WHITE : PIECE_BLACK;
         // if piece selected
-        if (GET_OCCUPIED(&position) & (1ULL << clicked)) {
+        if (GET_COLOR_OCCUPIED(&position, sideToMove) & (1ULL << clicked)) {
             selectedSq = clicked;
 
             // update legal moves
             legalMoves = 0;
             std::array<Move, 256> moves = {};
-            int numMoves = generate_moves(&position, PIECE_WHITE, moves.data());
+            int numMoves = generate_moves(&position, moves.data());
             for (int i = 0; i < numMoves; i++) {
                 Move move = moves[i];
                 if (MOVE_FROM(move) == selectedSq) {
                     legalMoves |= 1ULL << MOVE_TO(move);
+                    if (MOVE_PROMO(move) != 0) {
+                        promoMoves |= 1ULL << MOVE_TO(move);
+                    }
                 }
             }
-
-            std::cout << legalMoves << std::endl;
         } else if (legalMoves & (1ULL << clicked)) {
-            // todo: move execution
+            std::cout << clicked << std::endl;
+            if (promoMoves & (1ULL << clicked)) {
+                std::cout << "promo" << std::endl;
+                pendingPromo = PendingPromotion{selectedSq, clicked, true};
+                ImGui::OpenPopup("Promo");
+                std::cout << pendingPromo.display << std::endl;
+            } else {
+                execute_move(&position, ENCODE_MOVE(selectedSq, clicked, 0));
+                legalMoves = 0;
+                promoMoves = 0;
+                selectedSq = -1;
+            }
         }
     }
 }
