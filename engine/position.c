@@ -157,6 +157,17 @@ void print_position(Position *p) {
     }
 }
 
+void print_bitboard(uint64_t bb) {
+    for (int rank = 7; rank >= 0; rank--) {
+        for (int file = 0; file < 8; file++) {
+            int sq = rank * 8 + file;
+            printf("%c ", (bb & (1ULL << sq)) ? '1' : '.');
+        }
+        printf("  %d\n", rank + 1);
+    }
+    printf("a b c d e f g h\n");
+}
+
 /**
  * Since the bishop and rook attack generation are essentially the same, they
  * can be generated with a macro.
@@ -271,30 +282,183 @@ static bool are_aligned(int king_sq, int slider_sq, int piece_type) {
     FOREACH_SET_BIT(enemy_bb, piece_name) {                                    \
         if (are_aligned(king, piece_name, piece_type)) {                       \
             uint64_t between = squares_between[king][piece_name];              \
-            uint64_t blockers = between & own_pieces;                          \
+            uint64_t blockers = between & GET_OCCUPIED(p);                     \
             if (__builtin_popcountll(blockers) == 1) {                         \
                 pinned_pieces |= blockers;                                     \
-                pin_rays[__builtin_ctzll(blockers)] &=                         \
+                pin_rays[__builtin_ctzll(blockers)] =                          \
                     (1ULL << piece_name) | between;                            \
             }                                                                  \
         }                                                                      \
     }
 
-int generate_moves(Position *p, Move *arr) {
+uint64_t generate_attacks_xray(Position *p, int color, uint64_t king_bb) {
+    int opp = color ^ 8;
+    uint64_t opponent_attacks = 0;
+
+    FOREACH_SET_BIT(p->bitboards[opp | PIECE_KNIGHT], sq) {
+        opponent_attacks |= knight_moves[sq];
+    }
+    FOREACH_SET_BIT(p->bitboards[opp | PIECE_KING], sq) {
+        opponent_attacks |= king_moves[sq];
+    }
+
+    // Pawn attacks (directional)
+    uint64_t pawns = p->bitboards[opp | PIECE_PAWN];
+    if (opp == PIECE_WHITE) {
+        opponent_attacks |= ((pawns & ~FILE_A) << 7);
+        opponent_attacks |= ((pawns & ~FILE_H) << 9);
+    } else {
+        opponent_attacks |= ((pawns & ~FILE_H) >> 7);
+        opponent_attacks |= ((pawns & ~FILE_A) >> 9);
+    }
+
+    // Sliding attacks with x-ray
+    uint64_t occupied = GET_OCCUPIED(p);
+    FOREACH_SET_BIT(p->bitboards[opp | PIECE_ROOK], sq) {
+        opponent_attacks |= get_rook_attacks(occupied ^ king_bb, sq);
+    }
+    FOREACH_SET_BIT(p->bitboards[opp | PIECE_BISHOP], sq) {
+        opponent_attacks |= get_bishop_attacks(occupied ^ king_bb, sq);
+    }
+    FOREACH_SET_BIT(p->bitboards[opp | PIECE_QUEEN], sq) {
+        opponent_attacks |= get_queen_attacks(occupied ^ king_bb, sq);
+    }
+
+    return opponent_attacks;
+}
+
+int generate_evasive_moves(Position *p, Move *arr) {
     int moves_count = 0;
     int color = p->moves % 2 == 0 ? PIECE_WHITE : PIECE_BLACK;
     int opp = color ^ 8;
+    uint64_t king_bb = p->bitboards[color | PIECE_KING];
+    int king_sq = __builtin_ctzll(king_bb);
+    int king = king_sq;
+    int attackers = 0;
+    int attacker_sq = 0;
+
     uint64_t own_pieces = GET_COLOR_OCCUPIED(p, color);
     uint64_t opponent_pieces = GET_COLOR_OCCUPIED(p, color ^ 8);
-    uint64_t opponent_attacks = generate_attacks(p, color ^ 8);
+    uint64_t opponent_attacks = generate_attacks_xray(p, color, king_bb);
     uint64_t pinned_pieces = 0;
     uint64_t pin_rays[64] = {0};
 
+    // build a bitboad of attacked squares
+
+    // identify attackers
+    FOREACH_SET_BIT(p->bitboards[opp | PIECE_QUEEN], queen) {
+        if (get_queen_attacks(GET_OCCUPIED(p), queen) & (1ULL << king_sq)) {
+            attackers++;
+            attacker_sq = queen;
+        }
+    }
+
+    FOREACH_SET_BIT(p->bitboards[opp | PIECE_ROOK], rook) {
+        if (get_rook_attacks(GET_OCCUPIED(p), rook) & (1ULL << king_sq)) {
+            attackers++;
+            attacker_sq = rook;
+        }
+    }
+
+    FOREACH_SET_BIT(p->bitboards[opp | PIECE_BISHOP], bishop) {
+        if (get_bishop_attacks(GET_OCCUPIED(p), bishop) & (1ULL << king_sq)) {
+            attackers++;
+            attacker_sq = bishop;
+        }
+    }
+
+    FOREACH_SET_BIT(p->bitboards[opp | PIECE_KNIGHT], knight) {
+        if (knight_moves[knight] & (1ULL << king_sq)) {
+            attackers++;
+            attacker_sq = knight;
+        }
+    }
+
+    uint64_t pawn_attackers;
+    if (color == PIECE_WHITE) {
+        pawn_attackers =
+            ((king_bb & ~FILE_A) << 7) | ((king_bb & ~FILE_H) << 9);
+    } else {
+        pawn_attackers =
+            ((king_bb & ~FILE_H) >> 7) | ((king_bb & ~FILE_A) >> 9);
+    }
+    int num_pawn_attackers =
+        __builtin_popcountll(pawn_attackers & p->bitboards[opp | PIECE_PAWN]);
+    if (num_pawn_attackers > 0) {
+        attackers += num_pawn_attackers;
+        attacker_sq =
+            __builtin_ctzll(pawn_attackers & p->bitboards[opp | PIECE_PAWN]);
+    }
+
+    uint64_t attacker_bb = 1ULL << attacker_sq;
+
+    // king moves are always valid
+    uint64_t king_squares =
+        king_moves[king_sq] & ~own_pieces & ~opponent_attacks;
+    FOREACH_SET_BIT(king_squares, to) {
+        arr[moves_count++] = ENCODE_MOVE(king_sq, to, 0);
+    }
+
+    // if the king is attacked more than once, only it can move
+    if (attackers > 1) {
+        return moves_count;
+    }
+
+    // squares that can block the attacker.
+    uint64_t block_bb = squares_between[king_sq][attacker_sq] | attacker_bb;
+    // printf("%i\n", attacker_sq);
+
     // Generate pins
-    int king = __builtin_ctzll(p->bitboards[color | PIECE_KING]);
     DETECT_PINS(PIECE_BISHOP, p->bitboards[opp | PIECE_BISHOP], bishop)
     DETECT_PINS(PIECE_ROOK, p->bitboards[opp | PIECE_ROOK], rook)
     DETECT_PINS(PIECE_QUEEN, p->bitboards[opp | PIECE_QUEEN], queen)
+
+    uint64_t occupancy = own_pieces | opponent_pieces;
+    FOREACH_SET_BIT(p->bitboards[color | PIECE_BISHOP], from) {
+        uint64_t moves = get_bishop_attacks(occupancy, from);
+        if (pinned_pieces & (1ULL << from)) {
+            moves &= pin_rays[from];
+        }
+
+        moves &= block_bb;
+        FOREACH_SET_BIT(moves, to) {
+            arr[moves_count++] = ENCODE_MOVE(from, to, 0);
+        }
+    }
+
+    FOREACH_SET_BIT(p->bitboards[color | PIECE_ROOK], from) {
+        uint64_t moves = get_rook_attacks(occupancy, from);
+        if (pinned_pieces & (1ULL << from)) {
+            moves &= pin_rays[from];
+        }
+
+        moves &= block_bb;
+        FOREACH_SET_BIT(moves, to) {
+            arr[moves_count++] = ENCODE_MOVE(from, to, 0);
+        }
+    }
+
+    FOREACH_SET_BIT(p->bitboards[color | PIECE_QUEEN], from) {
+        uint64_t moves = get_queen_attacks(occupancy, from);
+        if (pinned_pieces & (1ULL << from)) {
+            moves &= pin_rays[from];
+        }
+
+        moves &= block_bb;
+        FOREACH_SET_BIT(moves, to) {
+            arr[moves_count++] = ENCODE_MOVE(from, to, 0);
+        }
+    }
+
+    FOREACH_SET_BIT(p->bitboards[color | PIECE_KNIGHT], from) {
+        if (!(pinned_pieces & (1ULL << from))) {
+            uint64_t attacks = knight_moves[from] & block_bb;
+            attacks &= ~own_pieces;
+            FOREACH_SET_BIT(attacks, to) {
+                arr[moves_count++] = ENCODE_MOVE(from, to, 0);
+            }
+        }
+    }
 
     // Generate pawn moves
     uint64_t pawns = p->bitboards[color | PIECE_PAWN];
@@ -307,11 +471,8 @@ int generate_moves(Position *p, Move *arr) {
                                : ((single_push & rank) >> 8) & empty;
 
     int push_dir = (color == PIECE_WHITE) ? 8 : -8;
-    add_pawn_moves(single_push, push_dir, arr, &moves_count);
-    add_pawn_moves(double_push, 2 * push_dir, arr, &moves_count);
 
     // Generate pawn captures
-    // todo: detect pins
     int shift_left = (color == PIECE_WHITE) ? 7 : -9;
     int shift_right = (color == PIECE_WHITE) ? 9 : -7;
     uint64_t mask_left = ~FILE_A;
@@ -328,6 +489,110 @@ int generate_moves(Position *p, Move *arr) {
             ? ((pawns & mask_right) << shift_right) & capture_mask
             : ((pawns & mask_right) >> -shift_right) & capture_mask;
 
+    single_push &= block_bb;
+    double_push &= block_bb;
+    left_captures &= block_bb;
+    right_captures &= block_bb;
+
+    // Filter out pinned pawn moves
+    FOREACH_SET_BIT(pawns & pinned_pieces, pawn_sq) {
+        uint64_t pin_ray = pin_rays[pawn_sq];
+        uint64_t push_dest = 1ULL << (pawn_sq + push_dir);
+        if (!(pin_ray & push_dest))
+            single_push &= ~push_dest;
+
+        uint64_t double_dest = 1ULL << (pawn_sq + (2 * push_dir));
+        if (!(pin_ray & double_dest))
+            double_push &= ~double_dest;
+
+        uint64_t left_dest = 1ULL << (pawn_sq + shift_left);
+        if (!(pin_ray & left_dest))
+            left_captures &= ~left_dest;
+
+        uint64_t right_dest = 1ULL << (pawn_sq + shift_right);
+        if (!(pin_ray & right_dest))
+            right_captures &= ~right_dest;
+    }
+
+    add_pawn_moves(single_push, push_dir, arr, &moves_count);
+    add_pawn_moves(double_push, 2 * push_dir, arr, &moves_count);
+    add_pawn_moves(left_captures, shift_left, arr, &moves_count);
+    add_pawn_moves(right_captures, shift_right, arr, &moves_count);
+
+    return moves_count;
+}
+
+int generate_moves(Position *p, Move *arr) {
+    int moves_count = 0;
+    int color = p->moves % 2 == 0 ? PIECE_WHITE : PIECE_BLACK;
+    int opp = color ^ 8;
+    uint64_t own_pieces = GET_COLOR_OCCUPIED(p, color);
+    uint64_t opponent_pieces = GET_COLOR_OCCUPIED(p, color ^ 8);
+    uint64_t opponent_attacks = generate_attacks(p, color ^ 8);
+    uint64_t pinned_pieces = 0;
+    uint64_t pin_rays[64] = {0};
+
+    // Handle check
+    int king = __builtin_ctzll(p->bitboards[color | PIECE_KING]);
+    if (opponent_attacks & p->bitboards[color | PIECE_KING])
+        return generate_evasive_moves(p, arr);
+
+    // Generate pins
+    DETECT_PINS(PIECE_BISHOP, p->bitboards[opp | PIECE_BISHOP], bishop)
+    DETECT_PINS(PIECE_ROOK, p->bitboards[opp | PIECE_ROOK], rook)
+    DETECT_PINS(PIECE_QUEEN, p->bitboards[opp | PIECE_QUEEN], queen)
+
+    // Generate pawn moves
+    uint64_t pawns = p->bitboards[color | PIECE_PAWN];
+    uint64_t empty = ~GET_OCCUPIED(p);
+    uint64_t single_push =
+        (color == PIECE_WHITE) ? (pawns << 8) & empty : (pawns >> 8) & empty;
+    uint64_t rank = (color == PIECE_WHITE) ? RANK_3 : RANK_6;
+    uint64_t double_push = (color == PIECE_WHITE)
+                               ? ((single_push & rank) << 8) & empty
+                               : ((single_push & rank) >> 8) & empty;
+
+    int push_dir = (color == PIECE_WHITE) ? 8 : -8;
+
+    // Generate pawn captures
+    int shift_left = (color == PIECE_WHITE) ? 7 : -9;
+    int shift_right = (color == PIECE_WHITE) ? 9 : -7;
+    uint64_t mask_left = ~FILE_A;
+    uint64_t mask_right = ~FILE_H;
+    pawns = p->bitboards[color | PIECE_PAWN];
+
+    uint64_t capture_mask = opponent_pieces | p->en_passant;
+    uint64_t left_captures =
+        shift_left >= 0 ? ((pawns & mask_left) << shift_left) & capture_mask
+                        : ((pawns & mask_left) >> -shift_left) & capture_mask;
+
+    uint64_t right_captures =
+        shift_right >= 0
+            ? ((pawns & mask_right) << shift_right) & capture_mask
+            : ((pawns & mask_right) >> -shift_right) & capture_mask;
+
+    // Filter out illegal pawn moves
+    FOREACH_SET_BIT(pawns & pinned_pieces, pawn_sq) {
+        uint64_t pin_ray = pin_rays[pawn_sq];
+        uint64_t push_dest = 1ULL << (pawn_sq + push_dir);
+        if (!(pin_ray & push_dest))
+            single_push &= ~push_dest;
+
+        uint64_t double_dest = 1ULL << (pawn_sq + (2 * push_dir));
+        if (!(pin_ray & double_dest))
+            double_push &= ~double_dest;
+
+        uint64_t left_dest = 1ULL << (pawn_sq + shift_left);
+        if (!(pin_ray & left_dest))
+            left_captures &= ~left_dest;
+
+        uint64_t right_dest = 1ULL << (pawn_sq + shift_right);
+        if (!(pin_ray & right_dest))
+            right_captures &= ~right_dest;
+    }
+
+    add_pawn_moves(single_push, push_dir, arr, &moves_count);
+    add_pawn_moves(double_push, 2 * push_dir, arr, &moves_count);
     add_pawn_moves(left_captures, shift_left, arr, &moves_count);
     add_pawn_moves(right_captures, shift_right, arr, &moves_count);
 

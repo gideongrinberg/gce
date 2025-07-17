@@ -55,9 +55,15 @@ target_include_directories(imgui PUBLIC
 add_library(gce-core STATIC engine/position.c engine/position.h engine/tables.c engine/tables.h
         engine/engine.h)
 target_include_directories(gce-core PUBLIC engine/)
+target_compile_options(gce-core PRIVATE
+        $<$<CONFIG:Release>:-Ofast>
+)
 
-add_executable(gce-perft perft/main.c)
+add_executable(gce-perft perft/main.cpp)
 target_link_libraries(gce-perft gce-core)
+target_compile_options(gce-perft PRIVATE
+        $<$<CONFIG:Release>:-Ofast>
+)
 
 add_executable(gce-gui
         gui/main.cpp
@@ -70,4 +76,9 @@ add_executable(gce-gui
         gui/window.hpp
         gui/game.hpp
         gui/info.hpp)
+
+target_compile_options(gce-gui PRIVATE
+        $<$<CONFIG:Release>:-O3>
+)
+
 target_link_libraries(gce-gui PRIVATE gce-core raylib imgui)
