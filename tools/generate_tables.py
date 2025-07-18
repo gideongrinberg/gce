@@ -58,7 +58,10 @@ class Slider:
     """Base class for sliding pieces used in magic bitboard generation"""
 
     def __init__(self):
-        pass
+        self.magic_list = None
+        p = Path(__file__).parent / "magics" / f"{self.name()}.txt"
+        if p.is_file():
+            self.magic_list = list(p.read_text().splitlines())
 
     def name(self) -> str:
         raise NotImplementedError()
@@ -100,27 +103,42 @@ class Slider:
 
         return blocker_configs, len(relevant_bits)
 
+    def test_magic(self, sq, magic) -> tuple[bool, dict[int, int]]:
+        blockers_list, relevant_bits = self.generate_blockers(sq)
+        table = {}
+        collision = False
+        for blockers_mask in blockers_list:
+            product = (
+                              blockers_mask * magic
+                      ) & 0xFFFFFFFFFFFFFFFF  # truncate to 64 bit
+            idx = product >> (64 - relevant_bits)
+            attack_mask = self.attack_mask(sq, blockers_mask)
+            if idx in table and table[idx] != attack_mask:
+                collision = True
+                break
+
+            table[idx] = attack_mask
+
+        if not collision:
+            return True, table
+        else:
+            return False, {}
+
     def generate_magic(self, sq) -> tuple[int, dict[int, int]]:
         """Generates the magic number lookup table per square"""
         num_attempts = 1_000_000
-        blockers_list, relevant_bits = self.generate_blockers(sq)
 
+        if self.magic_list is not None:
+            magic = int(self.magic_list[sq], 16)
+            collision, table = self.test_magic(sq, magic)
+            if collision:
+                print("Using precomputed magic")
+                return magic, table
+            else:
+                print("Precomputed magic failed")
         for _ in range(num_attempts):
-            table = {}
-            collision = False
             magic = sparse_rand()
-            for blockers_mask in blockers_list:
-                product = (
-                                  blockers_mask * magic
-                          ) & 0xFFFFFFFFFFFFFFFF  # truncate to 64 bit
-                idx = product >> (64 - relevant_bits)
-                attack_mask = self.attack_mask(sq, blockers_mask)
-                if idx in table and table[idx] != attack_mask:
-                    collision = True
-                    break
-
-                table[idx] = attack_mask
-
+            collision, table = self.test_magic(sq, magic)
             if not collision:
                 return magic, table
 
