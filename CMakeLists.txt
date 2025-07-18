@@ -1,114 +1,84 @@
 cmake_minimum_required(VERSION 3.31)
-project(gce C)
-set(CMAKE_C_STANDARD 99)
-include(FetchContent)
+project(gce C CXX)
 cmake_policy(SET CMP0169 OLD)
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_CXX_STANDARD 20)
 
-if (EMSCRIPTEN)
-    #    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -s ASYNCIFY -s GL_ENABLE_GET_PROC_ADDRESS=1")
-    #    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s USE_GLFW=3 -s FULL_ES3 -s ASSERTIONS=1 -s WASM=1 -s ASYNCIFY -s GL_ENABLE_GET_PROC_ADDRESS=1 --shell-file ${CMAKE_SOURCE_DIR}/shell.html")
-    set(CMAKE_EXECUTABLE_SUFFIX ".html")
-    set(PLATFORM "Web" CACHE STRING "Target platform" FORCE)
-endif ()
+include(FetchContent)
 
-set(CMAKE_C_FLAGS_DEBUG "-fsanitize=address,undefined -Wall -Wno-deprecated-declarations")
-set(CMAKE_EXE_LINKER_FLAGS_DEBUG "-fsanitize=address,undefined -Wall")
-
-# Download and build raylib
+# Download and build dependencies
 FetchContent_Declare(
         raylib
         GIT_REPOSITORY https://github.com/raysan5/raylib.git
-        GIT_TAG 5.0
+        GIT_TAG 5.5
 )
 
 set(FETCHCONTENT_QUIET OFF)
 set(BUILD_EXAMPLES OFF)
 FetchContent_MakeAvailable(raylib)
 
-# Add raylib nuklear
-FetchContent_Declare(
-        raylib_nuklear
-        GIT_REPOSITORY https://github.com/RobLoach/raylib-nuklear
-        GIT_TAG v5.5.1
+FetchContent_Populate(
+        rlImgui
+        GIT_REPOSITORY https://github.com/raylib-extras/rlImGui
+        GIT_TAG main
+        SOURCE_DIR ${CMAKE_BINARY_DIR}/rlImgui-src
 )
 
-FetchContent_MakeAvailable(raylib_nuklear)
-
-# cJSON for perft
-FetchContent_Declare(
-        cJSON
-        GIT_REPOSITORY https://github.com/DaveGamble/cJSON
-        GIT_TAG v1.7.18
+FetchContent_Populate(
+        imgui
+        GIT_REPOSITORY https://github.com/ocornut/imgui
+        GIT_TAG v1.92.1-docking
+        SOURCE_DIR ${CMAKE_BINARY_DIR}/imgui-src
 )
 
-FetchContent_Populate(cjson)
-if (!EMSCRIPTEN)
-    add_library(cjson STATIC ${cjson_SOURCE_DIR}/cJSON.c)
-    target_include_directories(cjson PUBLIC ${cjson_SOURCE_DIR})
-endif ()
+set(imgui_SOURCE_DIR ${CMAKE_BINARY_DIR}/imgui-src)
+set(rlImgui_SOURCE_DIR ${CMAKE_BINARY_DIR}/rlImgui-src)
 
-# Build GCE
-include_directories(core/)
+add_library(imgui STATIC
+        ${imgui_SOURCE_DIR}/imgui.cpp
+        ${imgui_SOURCE_DIR}/imgui_draw.cpp
+        ${imgui_SOURCE_DIR}/imgui_demo.cpp
+        ${imgui_SOURCE_DIR}/imgui_tables.cpp
+        ${imgui_SOURCE_DIR}/imgui_widgets.cpp
 
-add_library(gce-core STATIC # Shared code
-        core/core.h
-        core/core.c
-        core/moves.c
-        core/search.c
-        core/eval.c
+        ${rlImgui_SOURCE_DIR}/rlImGui.cpp
 )
 
-# GUI code
-add_executable(gce-gui gui/
-        gui/main.c
-        gui/assets.c
+target_link_libraries(imgui PUBLIC raylib)
+target_include_directories(imgui PUBLIC
+        ${imgui_SOURCE_DIR}
+        ${rlImgui_SOURCE_DIR}
+        ${raylib_SOURCE_DIR}/src
+)
+
+add_library(gce-core STATIC engine/position.c engine/position.h engine/tables.c engine/tables.h
+        engine/engine.h)
+target_include_directories(gce-core PUBLIC engine/)
+target_compile_options(gce-core PRIVATE
+        $<$<CONFIG:Release>:-Ofast>
+)
+
+add_executable(gce-perft perft/main.cpp)
+target_link_libraries(gce-perft gce-core)
+target_compile_options(gce-perft PRIVATE
+        $<$<CONFIG:Release>:-Ofast>
+)
+
+add_executable(gce-gui
+        gui/main.cpp
+        gui/board.hpp
+        gui/board.cpp
         gui/assets.h
-        gui/game.c
-        gui/game.h
+        gui/assets.c
         gui/textures.h
-        gui/textures.c)
+        gui/textures.c
+        gui/window.hpp
+        gui/game.hpp
+        gui/info.hpp)
 
-if (EMSCRIPTEN)
-    target_link_options(gce-gui PRIVATE
-            "-sUSE_GLFW=3"
-            "-sFULL_ES2"
-            "-sASSERTIONS=1"
-            "-sWASM=1"
-            "-sASYNCIFY"
-            "-sGL_ENABLE_GET_PROC_ADDRESS=1"
-            "-sEXPORTED_FUNCTIONS=_main,_on_browser_resize"
-            "-sEXPORTED_RUNTIME_METHODS=ccall,cwrap"
-            "--shell-file=${CMAKE_SOURCE_DIR}/shell.html"
-    )
-endif ()
-# Generate headers to embed assets
-add_custom_command(
-        OUTPUT ${CMAKE_SOURCE_DIR}/gui/images.h ${CMAKE_SOURCE_DIR}/gui/images.c
-        COMMAND python3 ${CMAKE_SOURCE_DIR}/gui/assets/build_assets.py
-        DEPENDS ${CMAKE_SOURCE_DIR}/gui/assets/build_assets.py
+target_compile_options(gce-gui PRIVATE
+        $<$<CONFIG:Release>:-O3>
 )
 
-add_custom_target(gui_assets
-        DEPENDS ${CMAKE_SOURCE_DIR}/gui/images.h ${CMAKE_SOURCE_DIR}/gui/images.c
-)
-
-add_dependencies(gce-gui gui_assets)
-target_link_libraries(gce-gui gce-core raylib raylib_nuklear)
-if (APPLE) # raylib stuff for mac
-    target_link_libraries(gce-gui "-framework IOKit")
-    target_link_libraries(gce-gui "-framework Cocoa")
-    target_link_libraries(gce-gui "-framework OpenGL")
-endif ()
-
-if (!EMSCRIPTEN)
-    # perft testing
-    add_executable(gce-perft perft/
-            perft/main.c)
-    target_link_libraries(gce-perft gce-core cjson)
-
-    # UCI interface
-    add_executable(gce-uci uci/ uci/main.c
-            uci/main.c)
-    target_link_libraries(gce-uci gce-core)
-endif ()
+target_link_libraries(gce-gui PRIVATE gce-core raylib imgui)

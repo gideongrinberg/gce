@@ -1,13 +1,16 @@
 #ifndef TEXTURES_H
 #define TEXTURES_H
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include "raylib.h"
-#include <stdint.h>
+#include <stdlib.h>
 
-extern Texture2D piece_textures[2][7];
+void loadPieceTextures(void);
+Texture2D getPieceTexture(uint8_t piece);
+void unloadPieceTextures(void);
 
-void load_piece_textures(void);
-Texture2D get_piece_texture(uint8_t piece);
-void unload_piece_textures(void);
-
+#ifdef __cplusplus
+}
+#endif
 #endif // TEXTURES_H

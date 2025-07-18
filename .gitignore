@@ -1,6 +1,7 @@
 .DS_Store
 gui/assets.h
 gui/assets.c
+engine/tables.c
 build/
 
 *.a
