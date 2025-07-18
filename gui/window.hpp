@@ -1,6 +1,7 @@
 #ifndef WINDOW_HPP
 #define WINDOW_HPP
-#include "position.h"
+#include "engine.h"
+
 class GuiWindow {
   public:
     explicit GuiWindow(Position &positionRef) : position(positionRef) {}

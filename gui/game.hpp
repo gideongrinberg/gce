@@ -1,5 +1,6 @@
 #ifndef GAME_HPP
 #define GAME_HPP
+#include "assets.h"
 #include "board.hpp"
 #include "info.hpp"
 #include "position.h"
@@ -37,6 +38,8 @@ class Game {
         rlImGuiSetup(true);
         ImGuiIO &io = ImGui::GetIO();
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+        ImGui::LoadIniSettingsFromMemory(
+            reinterpret_cast<const char *>(layout_ini), layout_ini_len);
 
         ImVec4 imguiBgColor = ImGui::GetStyleColorVec4(ImGuiCol_WindowBg);
         bgColor = {static_cast<unsigned char>(imguiBgColor.x * 255.0f),
@@ -67,8 +70,8 @@ class Game {
  * Creates an invisible window to which the other imgui windows
  * can dock.
  */
-void drawViewport() {
-    // Fullscreen invisible window for DockSpace
+inline void drawViewport() {
+    ImGuiIO &io = ImGui::GetIO();
     ImGuiViewport *viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->WorkPos);
     ImGui::SetNextWindowSize(viewport->WorkSize);
@@ -80,16 +83,29 @@ void drawViewport() {
         ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus |
         ImGuiWindowFlags_NoBackground;
 
-    // Remove all window padding
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-
     ImGui::Begin("DockSpaceHost", nullptr, hostWindowFlags);
     ImGuiID dockspaceID = ImGui::GetID("Dockspace");
     ImGui::DockSpace(dockspaceID, ImVec2(0.0f, 0.0f),
                      ImGuiDockNodeFlags_PassthruCentralNode);
 
+    if (ImGui::BeginMainMenuBar()) {
+#ifndef NDEBUG
+        if (ImGui::BeginMenu("Layout")) {
+            if (ImGui::MenuItem("Save layout")) {
+                ImGui::SaveIniSettingsToDisk("layout.ini");
+            }
+            if (ImGui::MenuItem("Load layout")) {
+                ImGui::LoadIniSettingsFromDisk("layout.ini");
+            }
+            ImGui::EndMenu();
+        }
+#endif
+        ImGui::EndMainMenuBar();
+    }
+
     ImGui::End();
-    ImGui::PopStyleVar(); // Restore original padding
+    ImGui::PopStyleVar();
 }
 
 #endif // GAME_HPP

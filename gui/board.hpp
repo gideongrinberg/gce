@@ -20,7 +20,7 @@ class Board : public GuiWindow {
     RenderTexture renderTexture{};
 
     explicit Board(Position &pos)
-        : GuiWindow(pos), selectedSq(-1),
+        : GuiWindow(pos), selectedSq(-1), legalMoves(0), promoMoves(0),
           renderTexture(LoadRenderTexture(2048, 2048)) {
         pendingPromo.display = false;
     }

@@ -1,3 +1,4 @@
+#define Vector2Ones ((Vector2){1.0f, 1.0f})
 #include "game.hpp"
 #include "raylib.h"
 #include "textures.h"

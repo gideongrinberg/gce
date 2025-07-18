@@ -1,6 +1,7 @@
 import glob
-import pathlib
 import os
+import pathlib
+
 
 def sanitize_symbol(name):
     return name.replace('.', '_').replace('-', '_').lower()
@@ -8,7 +9,7 @@ def sanitize_symbol(name):
 
 res_dir = pathlib.Path(__file__).resolve().parent / ".." / "gui" / "assets"
 all_files = lambda ext: glob.glob((res_dir / f"*.{ext}").as_posix())
-files = all_files('png') + all_files('ttf')
+files = all_files('png') + all_files('ttf') + all_files('ini')
 header_path = res_dir.parent / "assets.h"
 source_path = res_dir.parent / "assets.c"
 
@@ -17,7 +18,8 @@ with open(header_path, "w") as header_file:
     header_file.write("#ifndef ASSETS_H\n#define ASSETS_H\n")
     header_file.write("#ifdef __cplusplus\n")
     header_file.write("extern \"C\" {\n")
-    header_file.write("#endif\n\n")
+    header_file.write("#endif\n")
+    header_file.write("#include <stdint.h>\n\n")
     for file in files:
         filename = os.path.basename(file)
         symbol_base = sanitize_symbol(filename)

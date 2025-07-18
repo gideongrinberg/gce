@@ -4,6 +4,7 @@
 extern "C" {
 #endif
 #include "raylib.h"
+#include <stdint.h>
 #include <stdlib.h>
 
 void loadPieceTextures(void);
