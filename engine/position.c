@@ -96,7 +96,13 @@ Position *position_from_fen(const char *fen_string) {
     }
 
     fen = strtok(NULL, " ");
-    // todo: en passant
+    if (strcmp(fen, "-") != 0) {
+        int ep_file = fen[0] - 'a';
+        int ep_rank = fen[1] - '1';
+        p->en_passant = 1ULL << (ep_rank * 8 + ep_file);
+    } else {
+        p->en_passant = 0;
+    }
 
     fen = strtok(NULL, " ");
     int halfmove = atoi(fen);
@@ -105,7 +111,6 @@ Position *position_from_fen(const char *fen_string) {
     fen = strtok(NULL, " ");
     int moves = atoi(fen);
     p->moves = (moves - 1) * 2 + (strcmp(side_to_move, "b") == 0 ? 1 : 0);
-    p->en_passant = 0;
     return p;
 }
 

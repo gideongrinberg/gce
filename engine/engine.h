@@ -4,6 +4,7 @@
 extern "C" {
 #endif
 #include "position.h"
+#include "zobrist.h"
 #ifdef __cplusplus
 }
 #endif
