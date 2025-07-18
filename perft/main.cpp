@@ -147,9 +147,14 @@ class PerftResult {
     bool status;
     int totalNodes;
     double totalTime;
+    std::string name;
+    std::string fen;
+    std::vector<int> expected;
 
-    PerftResult(bool status, int totalNodes, double totalTime)
-        : status(status), totalNodes(totalNodes), totalTime(totalTime) {}
+    PerftResult(bool status, int totalNodes, double totalTime,
+                const PerftTest &test)
+        : status(status), totalNodes(totalNodes), totalTime(totalTime),
+          name(test.name), fen(test.fen), expected(test.expected) {}
 };
 
 // some utilities for testing
@@ -177,11 +182,12 @@ PerftResult runTest(PerftTest *test) {
     int maxDepth = test->expected.size();
 
     Position *p = position_from_fen(test->fen.c_str());
-    std::cout << COLOR_BOLD << COLOR_UNDERLINE << "Test " << test->name << ":\n"
-              << COLOR_RESET;
+    std::cout << COLOR_BOLD << COLOR_UNDERLINE << "Test " << test->name << ":"
+              << COLOR_RESET << std::endl;
     std::cout << COLOR_BOLD << "FEN:" << COLOR_RESET << " " << test->fen
-              << "\n";
-    std::cout << COLOR_BOLD << "Max depth: " << COLOR_RESET << maxDepth << "\n";
+              << std::endl;
+    std::cout << COLOR_BOLD << "Max depth: " << COLOR_RESET << maxDepth
+              << std::endl;
 
     for (int i = 0; i < test->expected.size(); i++) {
         int depth = i + 1;
@@ -198,19 +204,29 @@ PerftResult runTest(PerftTest *test) {
         std::cout << SC(ts) << "Depth " << i << ": found " << result << " "
                   << nodes << ", expected " << test->expected[i]
                   << " (wall: " << (wallEnd - wallStart) << "s)" << COLOR_RESET
-                  << "\n";
+                  << std::endl;
     }
 
     std::string finalStatus = success ? "succeeded" : "failed";
-    std::cout << "\n"
-              << COLOR_BOLD << SC(success) << "Test " << test->name << " "
-              << finalStatus << " in " << totalWall << " seconds" << COLOR_RESET
-              << "\n";
+    std::cout << "\n," << COLOR_BOLD << SC(success) << "Test " << test->name
+              << " " << finalStatus << " in " << totalWall << " seconds"
+              << COLOR_RESET << "\n"
+              << std::endl;
 
-    return PerftResult(success, totalNodes, totalWall);
+    return PerftResult(success, totalNodes, totalWall, *test);
 }
 
-int runSuite(char *path) {
+int runSuite(std::vector<std::string> args) {
+    std::string path = args[2];
+    std::ofstream failing;
+    if (args.size() >= 5) {
+        failing = std::ofstream(args[4], std::ios::out);
+        if (!failing.is_open()) {
+            std::cerr << COLOR_BOLD << COLOR_UNDERLINE << "Failed to open file"
+                      << COLOR_RESET << "\n";
+        }
+    }
+
     std::cout << std::fixed << std::setprecision(4);
     std::ifstream file(path);
     if (!file) {
@@ -235,14 +251,19 @@ int runSuite(char *path) {
             expected.push_back(std::stoi(moves));
         }
 
-        suite.push_back(PerftTest(std::to_string(tests++), fen, expected));
+        suite.emplace_back(std::to_string(tests++), fen, expected);
     }
 
-    std::cout << "Found " << suite.size() << " tests.\n";
+    std::cout << "Found " << suite.size() << " tests.\n\n";
     std::vector<PerftResult> results;
     results.reserve(suite.size());
     for (auto &t : suite) {
-        results.push_back(runTest(&t));
+        auto result = runTest(&t);
+        if (!result.status && failing.is_open()) {
+            failing << t.fen << std::endl;
+        }
+
+        results.push_back(result);
     }
 
     double totalTime = 0;
@@ -257,7 +278,6 @@ int runSuite(char *path) {
         if (r.status) {
             numSuccess++;
         }
-
         totalTests++;
     }
 
@@ -270,16 +290,16 @@ int runSuite(char *path) {
 }
 
 int main(int argc, char **argv) {
+    if (argc >= 3 && strcmp(argv[1], "--suite") == 0) {
+        return runSuite(std::vector<std::string>(argv, argv + argc));
+    }
+
     if (argc == 4) {
         runPerftree(argc, argv);
         return 0;
     }
 
     if (argc == 3) {
-        if (strcmp(argv[1], "--suite") == 0) {
-            return runSuite(argv[2]);
-        }
-
         char *newArgv[4] = {argv[0], argv[1], argv[2], const_cast<char *>("")};
         runPerftree(argc, newArgv);
     }

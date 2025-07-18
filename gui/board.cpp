@@ -6,6 +6,7 @@
 
 #define SELECTED_COLOR (Color){72, 118, 255, 180}
 #define LEGAL_COLOR (Color){255, 0, 255, 128}
+#define ATTACK_COLOR (Color){220, 20, 60, 92}
 
 void Board::draw() const {
     BeginTextureMode(renderTexture);
@@ -25,6 +26,11 @@ void Board::draw() const {
     }
 
     FOREACH_SET_BIT(legalMoves, sq) {
+        Vector2 pos = squareToScreen(sq, tileSize);
+        DrawRectangle(pos.x, pos.y, tileSize, tileSize, LEGAL_COLOR);
+    }
+
+    FOREACH_SET_BIT(attacks, sq) {
         Vector2 pos = squareToScreen(sq, tileSize);
         DrawRectangle(pos.x, pos.y, tileSize, tileSize, LEGAL_COLOR);
     }
@@ -115,6 +121,8 @@ void Board::update() {
                 promoMoves = 0;
                 selectedSq = -1;
             }
+
+            attacks = generate_attacks(&position, sideToMove ^ 8);
         }
     }
 }

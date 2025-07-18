@@ -619,7 +619,7 @@ int generate_moves(Position *p, Move *arr) {
         }
 
         if ((p->castling_rights & WHITE_QUEENSIDE) &&
-            !(castle_mask & ((1ULL << 1) | (1ULL << 2) | (1ULL << 3)))) {
+            !(castle_mask & ((1ULL << 2) | (1ULL << 3)))) {
             arr[moves_count++] = ENCODE_MOVE(king, SQUARE_INDEX('c', '1'), 0);
         }
     } else if (color == PIECE_BLACK && !(opponent_attacks & (1ULL << king))) {
@@ -629,7 +629,7 @@ int generate_moves(Position *p, Move *arr) {
         }
 
         if ((p->castling_rights & BLACK_QUEENSIDE) &&
-            !(castle_mask & ((1ULL << 57) | (1ULL << 58) | (1ULL << 59)))) {
+            !(castle_mask & ((1ULL << 58) | (1ULL << 59)))) {
             arr[moves_count++] = ENCODE_MOVE(king, SQUARE_INDEX('c', '8'), 0);
         }
     }

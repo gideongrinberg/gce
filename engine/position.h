@@ -90,5 +90,6 @@ Position *position_from_fen(const char *fen_string);
 
 void print_position(Position *p);
 int generate_moves(Position *p, Move *arr);
+uint64_t generate_attacks(Position *p, int color);
 void execute_move(Position *p, Move move);
 #endif // POSITION_H
