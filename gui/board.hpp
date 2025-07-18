@@ -23,7 +23,6 @@ class Board : public GuiWindow {
         : GuiWindow(pos), selectedSq(-1),
           renderTexture(LoadRenderTexture(2048, 2048)) {
         pendingPromo.display = false;
-        attacks = generate_attacks(&pos, PIECE_WHITE);
     }
 
     void draw() const;
@@ -35,7 +34,6 @@ class Board : public GuiWindow {
     int selectedSq;
     uint64_t legalMoves;
     uint64_t promoMoves;
-    uint64_t attacks;
     PendingPromotion pendingPromo;
     int getClicked();
 };
