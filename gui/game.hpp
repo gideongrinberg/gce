@@ -16,12 +16,15 @@ class Game {
     void render();
 
     Position position;
+#ifndef NDEBUG
+    int showPst;
+#endif
 
   private:
+    void drawViewport();
+
     std::vector<std::unique_ptr<GuiWindow>> windows;
     Color bgColor;
 };
-
-void drawViewport();
 
 #endif // GAME_HPP

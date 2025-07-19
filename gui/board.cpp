@@ -7,6 +7,7 @@
 #define SELECTED_COLOR (Color){72, 118, 255, 180}
 #define LEGAL_COLOR (Color){255, 0, 255, 128}
 
+Color hslToRgb(float h, float s, float l, unsigned char alpha = 255);
 void Board::draw() const {
     BeginTextureMode(renderTexture);
     ClearBackground(RAYWHITE);
@@ -18,16 +19,45 @@ void Board::draw() const {
         DrawRectangle(pos.x, pos.y, tileSize, tileSize, color);
     }
 
-    // highlight selected sq
-    if (selectedSq != -1) {
-        Vector2 pos = squareToScreen(selectedSq, tileSize);
-        DrawRectangle(pos.x, pos.y, tileSize, tileSize, SELECTED_COLOR);
-    }
+    // draw PST values (for debug)
+#ifndef NDEBUG
+    if (game.showPst != -1) {
+        bool black = PIECE_COLOR(game.showPst) == PIECE_BLACK;
+        int piece = PIECE_TYPE(game.showPst);
+        const int *pst = piece_tables[piece];
+        auto [min, max] = std::minmax_element(pst, pst + 64);
+        for (int sq = 0; sq < 64; sq++) {
+            int sqFlipped = black ? sq ^ 56 : sq;
 
-    FOREACH_SET_BIT(legalMoves, sq) {
-        Vector2 pos = squareToScreen(sq, tileSize);
-        DrawRectangle(pos.x, pos.y, tileSize, tileSize, LEGAL_COLOR);
+            int sqValue = pst[sqFlipped];
+
+            float norm = 0.5f;
+            if (*max - *min != 0) {
+                norm = static_cast<float>(sqValue - *min) / (*max - *min);
+                std::cout << max - min << std::endl;
+            }
+            Vector2 pos = squareToScreen(sqFlipped, tileSize);
+            float hue = (1.0f - norm) * 120.0f;
+            Color c = hslToRgb(hue, 1.0f, 0.5f, 200);
+            DrawRectangle(pos.x, pos.y, tileSize, tileSize, c);
+        }
+
+    } else {
+#endif
+        // highlight selected sq
+        if (selectedSq != -1) {
+            Vector2 pos = squareToScreen(selectedSq, tileSize);
+            DrawRectangle(pos.x, pos.y, tileSize, tileSize, SELECTED_COLOR);
+        }
+
+        FOREACH_SET_BIT(legalMoves, sq) {
+            Vector2 pos = squareToScreen(sq, tileSize);
+            DrawRectangle(pos.x, pos.y, tileSize, tileSize, LEGAL_COLOR);
+        }
+
+#ifndef NDEBUG
     }
+#endif
 
     // draw pieces
     const std::array<uint8_t, 2> colors = {PIECE_WHITE, PIECE_BLACK};
@@ -179,4 +209,46 @@ int Board::getClicked() {
     }
 
     return -1;
+}
+
+Color hslToRgb(float h, float s, float l, unsigned char alpha) {
+    float c = (1.0f - std::fabs(2.0f * l - 1.0f)) * s;
+    float h_prime = h / 60.0f;
+    float x = c * (1.0f - std::fabs(fmod(h_prime, 2.0f) - 1.0f));
+
+    float r = 0, g = 0, b = 0;
+    if (0 <= h_prime && h_prime < 1) {
+        r = c;
+        g = x;
+        b = 0;
+    } else if (1 <= h_prime && h_prime < 2) {
+        r = x;
+        g = c;
+        b = 0;
+    } else if (2 <= h_prime && h_prime < 3) {
+        r = 0;
+        g = c;
+        b = x;
+    } else if (3 <= h_prime && h_prime < 4) {
+        r = 0;
+        g = x;
+        b = c;
+    } else if (4 <= h_prime && h_prime < 5) {
+        r = x;
+        g = 0;
+        b = c;
+    } else if (5 <= h_prime && h_prime < 6) {
+        r = c;
+        g = 0;
+        b = x;
+    }
+
+    float m = l - c / 2.0f;
+    r += m;
+    g += m;
+    b += m;
+
+    return {static_cast<unsigned char>(r * 255.0f),
+            static_cast<unsigned char>(g * 255.0f),
+            static_cast<unsigned char>(b * 255.0f), alpha};
 }

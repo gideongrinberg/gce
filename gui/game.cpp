@@ -2,6 +2,7 @@
 
 #include "assets.h"
 #include "board.hpp"
+#include "imgui_internal.h"
 #include "info.hpp"
 #include "rlImGui.h"
 #include "textures.h"
@@ -16,6 +17,10 @@ Game::Game() {
     setup();
     windows.push_back(std::make_unique<Board>(*this));
     windows.push_back(std::make_unique<InfoWindow>(*this));
+
+#ifndef NDEBUG
+    showPst = -1;
+#endif
 }
 
 void Game::setup() {
@@ -51,7 +56,7 @@ void Game::render() {
 }
 
 // draw the viewport and menu bar
-inline void drawViewport() {
+void Game::drawViewport() {
     ImGuiIO &io = ImGui::GetIO();
     ImGuiViewport *viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->WorkPos);
@@ -72,12 +77,43 @@ inline void drawViewport() {
 
     if (ImGui::BeginMainMenuBar()) {
 #ifndef NDEBUG
-        if (ImGui::BeginMenu("Layout")) {
+        if (ImGui::BeginMenu("Debug")) {
             if (ImGui::MenuItem("Save layout")) {
                 ImGui::SaveIniSettingsToDisk("layout.ini");
             }
-            if (ImGui::MenuItem("Load layout")) {
-                ImGui::LoadIniSettingsFromDisk("layout.ini");
+
+            if (ImGui::BeginMenu("Display PST")) {
+                std::array<std::string, 2> colors = {"White", "Black"};
+                std::array<std::string, 6> pieces = {"Pawn", "Knight", "Bishop",
+                                                     "Rook", "Queen",  "King"};
+
+                static int selectedPiece = -1, selectedColor = -1;
+                for (int i = 0; i < colors.size(); i++) {
+                    if (ImGui::MenuItem(colors[i].c_str(), nullptr,
+                                        selectedColor == i)) {
+                        selectedColor = i;
+                    }
+                }
+
+                ImGui::Separator();
+
+                for (int i = 0; i < pieces.size(); i++) {
+                    if (ImGui::MenuItem(pieces[i].c_str(), nullptr,
+                                        selectedPiece == i)) {
+                        selectedPiece = i;
+                    }
+                }
+
+                ImGui::Separator();
+                if (ImGui::MenuItem("Reset")) {
+                    selectedPiece = -1;
+                    selectedColor = -1;
+                    showPst = -1;
+                } else if (selectedPiece != -1 && selectedColor != -1) {
+                    showPst = (selectedColor * 8) | selectedPiece;
+                }
+
+                ImGui::EndMenu();
             }
             ImGui::EndMenu();
         }
