@@ -2,12 +2,10 @@
 #define BOARD_HPP
 
 #include "engine.h"
-#include "imgui.h"
 #include "raylib.h"
 #include "window.hpp"
 
 #include <array>
-#include <memory>
 
 struct PendingPromotion {
     int from;
@@ -19,8 +17,8 @@ class Board : public GuiWindow {
   public:
     RenderTexture renderTexture{};
 
-    explicit Board(Position &pos)
-        : GuiWindow(pos), selectedSq(-1), legalMoves(0), promoMoves(0),
+    explicit Board(Game &game)
+        : GuiWindow(game), selectedSq(-1), legalMoves(0), promoMoves(0),
           renderTexture(LoadRenderTexture(2048, 2048)) {
         pendingPromo.display = false;
     }

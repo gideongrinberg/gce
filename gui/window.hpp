@@ -1,16 +1,16 @@
 #ifndef WINDOW_HPP
 #define WINDOW_HPP
-#include "engine.h"
 
+class Game;
 class GuiWindow {
   public:
-    explicit GuiWindow(Position &positionRef) : position(positionRef) {}
+    explicit GuiWindow(Game &game) : game(game) {}
     virtual ~GuiWindow() = default;
 
     virtual void render() = 0;
 
   protected:
-    Position &position;
+    Game &game;
 };
 
 #endif // WINDOW_HPP

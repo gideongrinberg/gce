@@ -1,7 +1,7 @@
 #include "board.hpp"
-
+#include "game.hpp"
+#include "imgui.h"
 #include "textures.h"
-
 #include <iostream>
 
 #define SELECTED_COLOR (Color){72, 118, 255, 180}
@@ -37,7 +37,7 @@ void Board::draw() const {
 
     for (auto color : colors) {
         for (auto piece : pieces) {
-            FOREACH_SET_BIT(position.bitboards[color | piece], sq) {
+            FOREACH_SET_BIT(game.position.bitboards[color | piece], sq) {
                 Vector2 pos = squareToScreen(sq, tileSize);
                 Texture2D tex = getPieceTexture(color | piece);
                 Rectangle src = {0, 0, static_cast<float>(tex.width),
@@ -72,7 +72,7 @@ void Board::update() {
         if (ImGui::RadioButton("Queen", promotionChoice == 4))
             promotionChoice = 4;
         if (ImGui::Button("Ok")) {
-            execute_move(&position,
+            execute_move(&game.position,
                          ENCODE_MOVE(pendingPromo.from, pendingPromo.to,
                                      promotionChoice));
             pendingPromo.display = false;
@@ -84,15 +84,17 @@ void Board::update() {
     }
 
     if (clicked != -1) {
-        int sideToMove = position.moves % 2 == 0 ? PIECE_WHITE : PIECE_BLACK;
+        int sideToMove =
+            game.position.moves % 2 == 0 ? PIECE_WHITE : PIECE_BLACK;
         // if piece selected
-        if (GET_COLOR_OCCUPIED(&position, sideToMove) & (1ULL << clicked)) {
+        if (GET_COLOR_OCCUPIED(&game.position, sideToMove) &
+            (1ULL << clicked)) {
             selectedSq = clicked;
 
             // update legal moves
             legalMoves = 0;
             std::array<Move, 256> moves = {};
-            int numMoves = generate_moves(&position, moves.data());
+            int numMoves = generate_moves(&game.position, moves.data());
             for (int i = 0; i < numMoves; i++) {
                 Move move = moves[i];
                 if (MOVE_FROM(move) == selectedSq) {
@@ -110,7 +112,8 @@ void Board::update() {
                 ImGui::OpenPopup("Promo");
                 std::cout << pendingPromo.display << std::endl;
             } else {
-                execute_move(&position, ENCODE_MOVE(selectedSq, clicked, 0));
+                execute_move(&game.position,
+                             ENCODE_MOVE(selectedSq, clicked, 0));
                 legalMoves = 0;
                 promoMoves = 0;
                 selectedSq = -1;
