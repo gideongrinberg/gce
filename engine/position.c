@@ -787,3 +787,20 @@ end: // cleanup
         p->halfmoves = 0;
     }
 }
+GameOutcome position_outcome(Position *p) {
+    if (p->halfmoves >= 50) {
+        return DRAW;
+    }
+
+    Move buffer[256];
+    if (generate_moves(p, buffer) == 0) {
+        int side_to_move = (p->moves % 2 == 0) ? PIECE_WHITE : PIECE_BLACK;
+        if (generate_attacks(p, side_to_move ^ 8) &
+            p->bitboards[side_to_move | PIECE_KING]) {
+            return CHECKMATE;
+        } else {
+            return STALEMATE;
+        }
+    }
+    return ONGOING;
+}

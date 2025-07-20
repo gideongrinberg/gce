@@ -52,6 +52,9 @@ enum {
     BLACK_QUEENSIDE = 8
 };
 
+typedef uint8_t GameOutcome;
+enum { ONGOING = 0, CHECKMATE = 1, DRAW = 2, STALEMATE = 3 };
+
 typedef struct {
     uint64_t bitboards[MAX_PIECE];
     uint64_t en_passant;
@@ -92,4 +95,5 @@ void print_position(Position *p);
 int generate_moves(Position *p, Move *arr);
 uint64_t generate_attacks(Position *p, int color);
 void execute_move(Position *p, Move move);
+GameOutcome position_outcome(Position *p);
 #endif // POSITION_H

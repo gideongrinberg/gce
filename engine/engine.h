@@ -3,7 +3,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#include "eval.h"
 #include "position.h"
+#include "search.h"
 #include "zobrist.h"
 #ifdef __cplusplus
 }
