@@ -2,6 +2,7 @@
 #define BOARD_HPP
 
 #include "engine.h"
+#include "imgui.h"
 #include "raylib.h"
 #include "window.hpp"
 
@@ -25,7 +26,8 @@ class Board : public GuiWindow {
 
     void draw() const;
     void update();
-    void render();
+    void handleInput(const ImVec2 &boardTopLeft, const ImVec2 &boardSize);
+    void render() override;
 
   private:
     std::array<RenderTexture2D, MAX_PIECE> pieceTextures;
@@ -33,7 +35,7 @@ class Board : public GuiWindow {
     uint64_t legalMoves;
     uint64_t promoMoves;
     PendingPromotion pendingPromo;
-    int getClicked();
+    static int getClicked(const ImVec2 &boardTopLeft, const ImVec2 &boardSize);
 };
 
 inline Vector2 squareToScreen(int square, int tileSize) {

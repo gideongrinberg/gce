@@ -1,8 +1,8 @@
 #include "board.hpp"
 #include "game.hpp"
-#include "imgui.h"
 #include "textures.h"
 #include <iostream>
+#include <thread>
 
 #define SELECTED_COLOR (Color){72, 118, 255, 180}
 #define LEGAL_COLOR (Color){255, 0, 255, 128}
@@ -28,7 +28,6 @@ void Board::draw() const {
         auto [min, max] = std::minmax_element(pst, pst + 64);
         for (int sq = 0; sq < 64; sq++) {
             int sqFlipped = black ? sq ^ 56 : sq;
-
             int sqValue = pst[sqFlipped];
 
             float norm = 0.5f;
@@ -46,13 +45,13 @@ void Board::draw() const {
 #endif
         // highlight selected sq
         if (selectedSq != -1) {
-            Vector2 pos = squareToScreen(selectedSq, tileSize);
-            DrawRectangle(pos.x, pos.y, tileSize, tileSize, SELECTED_COLOR);
+            auto [x, y] = squareToScreen(selectedSq, tileSize);
+            DrawRectangle(x, y, tileSize, tileSize, SELECTED_COLOR);
         }
 
         FOREACH_SET_BIT(legalMoves, sq) {
-            Vector2 pos = squareToScreen(sq, tileSize);
-            DrawRectangle(pos.x, pos.y, tileSize, tileSize, LEGAL_COLOR);
+            auto [x, y] = squareToScreen(sq, tileSize);
+            DrawRectangle(x, y, tileSize, tileSize, LEGAL_COLOR);
         }
 
 #ifndef NDEBUG
@@ -60,10 +59,10 @@ void Board::draw() const {
 #endif
 
     // draw pieces
-    const std::array<uint8_t, 2> colors = {PIECE_WHITE, PIECE_BLACK};
-    const std::array<uint8_t, 6> pieces = {PIECE_PAWN,   PIECE_KNIGHT,
-                                           PIECE_BISHOP, PIECE_ROOK,
-                                           PIECE_QUEEN,  PIECE_KING};
+    constexpr std::array<uint8_t, 2> colors = {PIECE_WHITE, PIECE_BLACK};
+    constexpr std::array<uint8_t, 6> pieces = {PIECE_PAWN,   PIECE_KNIGHT,
+                                               PIECE_BISHOP, PIECE_ROOK,
+                                               PIECE_QUEEN,  PIECE_KING};
 
     for (auto color : colors) {
         for (auto piece : pieces) {
@@ -84,12 +83,13 @@ void Board::draw() const {
     EndTextureMode();
 }
 
-void Board::update() {
-    int clicked = getClicked();
+void Board::handleInput(const ImVec2 &boardTopLeft, const ImVec2 &boardSize) {
+    int clicked = getClicked(boardTopLeft, boardSize);
+    int sideToMove = game.position.moves % 2 == 0 ? PIECE_WHITE : PIECE_BLACK;
+    // promotion modal
     if (ImGui::BeginPopupModal("Promo", &pendingPromo.display,
                                ImGuiWindowFlags_AlwaysAutoResize |
                                    ImGuiWindowFlags_NoDocking)) {
-        std::cout << "displaying modal" << std::endl;
 
         ImGui::Text("Choose promotion piece:");
         static int promotionChoice = 0;
@@ -114,8 +114,6 @@ void Board::update() {
     }
 
     if (clicked != -1) {
-        int sideToMove =
-            game.position.moves % 2 == 0 ? PIECE_WHITE : PIECE_BLACK;
         // if piece selected
         if (GET_COLOR_OCCUPIED(&game.position, sideToMove) &
             (1ULL << clicked)) {
@@ -135,7 +133,6 @@ void Board::update() {
                 }
             }
         } else if (legalMoves & (1ULL << clicked)) {
-            std::cout << clicked << std::endl;
             if (promoMoves & (1ULL << clicked)) {
                 std::cout << "promo" << std::endl;
                 pendingPromo = PendingPromotion{selectedSq, clicked, true};
@@ -152,7 +149,38 @@ void Board::update() {
     }
 }
 
+void Board::update() {
+    // static int lastEngineMove = -1;
+    // -1 = no, 0 = started, 1 = done
+    static int engineStatus = -1;
+    static std::optional<Move> bestMove;
+    int sideToMove = game.position.moves % 2 == 0 ? PIECE_WHITE : PIECE_BLACK;
+
+    // make engine move
+    if (game.mode == ENGINE && sideToMove != game.playerColor) {
+        if (engineStatus == -1) {
+            // todo: use async in emscripten build
+            std::thread([this] {
+                engineStatus = 0;
+                bestMove = get_best_move(&game.position, 5);
+                engineStatus = 1;
+            }).detach();
+        } else if (engineStatus == 1 && bestMove.has_value()) {
+            execute_move(&game.position, bestMove.value());
+            bestMove = std::nullopt;
+            engineStatus = -1;
+            // lastEngineMove = game.position.moves + 1;
+        }
+    }
+
+    if (position_outcome(&game.position) != ONGOING) {
+        game.state = GAME_OVER;
+    }
+}
+
 void Board::render() {
+    if (game.state == IN_PROGRESS)
+        update();
     draw();
     ImGui::Begin("Board");
     // Size board to texture
@@ -182,27 +210,22 @@ void Board::render() {
     const auto texId = static_cast<ImTextureID>(
         static_cast<uintptr_t>(renderTexture.texture.id));
     ImGui::Image(texId, drawSize, ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
-    update();
+    ImVec2 boardTopLeft = ImGui::GetItemRectMin();
+    ImVec2 boardSize = ImGui::GetItemRectSize();
+    handleInput(boardTopLeft, boardSize);
     ImGui::End();
 }
 
-int Board::getClicked() {
+int Board::getClicked(const ImVec2 &boardTopLeft, const ImVec2 &boardSize) {
     const ImVec2 mousePos = ImGui::GetMousePos();
-    const ImVec2 boardTopLeft = ImGui::GetItemRectMin();
-    const ImVec2 boardSize = ImGui::GetItemRectSize();
-
-    const float relX = mousePos.x - boardTopLeft.x;
-    const float relY = mousePos.y - boardTopLeft.y;
+    float relX = mousePos.x - boardTopLeft.x;
+    float relY = mousePos.y - boardTopLeft.y;
 
     if (relX >= 0 && relX < boardSize.x && relY >= 0 && relY < boardSize.y) {
-
         float scale = boardSize.x / 8.0f;
-
         int file = static_cast<int>(relX / scale);
         int rank = 7 - static_cast<int>(relY / scale);
-
         int square = rank * 8 + file;
-
         if (ImGui::IsMouseClicked(0, false)) {
             return square;
         }

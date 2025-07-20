@@ -4,20 +4,21 @@
 #include "board.hpp"
 #include "imgui_internal.h"
 #include "info.hpp"
+#include "modals.hpp"
 #include "rlImGui.h"
 #include "textures.h"
 
 #include <memory>
 #include <vector>
 
-Game::Game() {
+Game::Game() : state(NEW_GAME) {
     position = *position_from_fen(
         "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
     setup();
     windows.push_back(std::make_unique<Board>(*this));
     windows.push_back(std::make_unique<InfoWindow>(*this));
-
+    windows.push_back(std::make_unique<GameModal>(*this));
 #ifndef NDEBUG
     showPst = -1;
 #endif
@@ -76,6 +77,12 @@ void Game::drawViewport() {
                      ImGuiDockNodeFlags_PassthruCentralNode);
 
     if (ImGui::BeginMainMenuBar()) {
+        if (ImGui::BeginMenu("Game")) {
+            if (ImGui::MenuItem("New game")) {
+                state = NEW_GAME;
+            }
+            ImGui::EndMenu();
+        }
 #ifndef NDEBUG
         if (ImGui::BeginMenu("Debug")) {
             if (ImGui::MenuItem("Save layout")) {
