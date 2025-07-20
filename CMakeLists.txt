@@ -69,6 +69,9 @@ target_compile_options(gce-perft PRIVATE
         $<$<CONFIG:Release>:-Ofast>
 )
 
+add_executable(gce-uci uci/main.cpp uci/logger.hpp)
+target_link_libraries(gce-uci PUBLIC gce-core)
+
 add_executable(gce-test test/main.c test/tinytest.h)
 target_link_libraries(gce-test PUBLIC gce-core)
 
