@@ -29,8 +29,14 @@ void loadPieceTextures(void) {
             Image img = LoadImageFromMemory(".png", sources[color][type].data,
                                             sources[color][type].len);
             pieceTextures[color][type] = LoadTextureFromImage(img);
+#ifdef EMSCRIPTEN
+            SetTextureFilter(pieceTextures[color][type],
+                             TEXTURE_FILTER_TRILINEAR);
+#else
+
             SetTextureFilter(pieceTextures[color][type],
                              TEXTURE_FILTER_BILINEAR);
+#endif
             UnloadImage(img);
         }
     }

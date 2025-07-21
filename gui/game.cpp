@@ -26,7 +26,10 @@ Game::Game(int width, int height)
 
 void Game::setup() {
 #ifndef EMSCRIPTEN
-    SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_MSAA_4X_HINT);
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_MSAA_4X_HINT |
+                   FLAG_WINDOW_HIGHDPI);
+#else
+    SetConfigFlags(FLAG_WINDOW_HIGHDPI);
 #endif
     InitWindow(width, height, "Gideon's Chess Engine (v0.2.0)");
 #ifndef EMSCRIPTEN
