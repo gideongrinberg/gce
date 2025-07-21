@@ -188,9 +188,8 @@ void print_bitboard(uint64_t bb) {
 
 DEFINE_SLIDER_ATTACK_FN(rook)
 DEFINE_SLIDER_ATTACK_FN(bishop)
-uint64_t get_queen_attacks(uint64_t occupancy, int sq) {
-    // a queen is just a bishop and a rook combined
-    return get_bishop_attacks(occupancy, sq) | get_rook_attacks(occupancy, sq);
+static inline uint64_t get_queen_attacks(uint64_t occupancy, int sq) {
+    return get_rook_attacks(occupancy, sq) | get_bishop_attacks(occupancy, sq);
 }
 
 uint64_t generate_attacks(Position *p, int color) {
@@ -224,15 +223,15 @@ uint64_t generate_attacks(Position *p, int color) {
 
     // Sliders
     uint64_t occupied = GET_OCCUPIED(p);
-    FOREACH_SET_BIT(p->bitboards[color | PIECE_QUEEN], queen) {
-        attacks |= get_queen_attacks(occupied, queen);
-    }
-
-    FOREACH_SET_BIT(p->bitboards[color | PIECE_BISHOP], bishop) {
+    FOREACH_SET_BIT(p->bitboards[color | PIECE_BISHOP] |
+                        p->bitboards[color | PIECE_QUEEN],
+                    bishop) {
         attacks |= get_bishop_attacks(occupied, bishop);
     }
 
-    FOREACH_SET_BIT(p->bitboards[color | PIECE_ROOK], rook) {
+    FOREACH_SET_BIT(p->bitboards[color | PIECE_ROOK] |
+                        p->bitboards[color | PIECE_QUEEN],
+                    rook) {
         attacks |= get_rook_attacks(occupied, rook);
     }
 
@@ -319,14 +318,14 @@ uint64_t generate_attacks_xray(Position *p, int color, uint64_t king_bb) {
 
     // Sliding attacks with x-ray
     uint64_t occupied = GET_OCCUPIED(p);
-    FOREACH_SET_BIT(p->bitboards[opp | PIECE_ROOK], sq) {
+    FOREACH_SET_BIT(
+        p->bitboards[opp | PIECE_ROOK] | p->bitboards[opp | PIECE_QUEEN], sq) {
         opponent_attacks |= get_rook_attacks(occupied ^ king_bb, sq);
     }
-    FOREACH_SET_BIT(p->bitboards[opp | PIECE_BISHOP], sq) {
+    FOREACH_SET_BIT(p->bitboards[opp | PIECE_BISHOP] |
+                        p->bitboards[opp | PIECE_QUEEN],
+                    sq) {
         opponent_attacks |= get_bishop_attacks(occupied ^ king_bb, sq);
-    }
-    FOREACH_SET_BIT(p->bitboards[opp | PIECE_QUEEN], sq) {
-        opponent_attacks |= get_queen_attacks(occupied ^ king_bb, sq);
     }
 
     return opponent_attacks;
@@ -344,29 +343,27 @@ int generate_evasive_moves(Position *p, Move *arr) {
 
     uint64_t own_pieces = GET_COLOR_OCCUPIED(p, color);
     uint64_t opponent_pieces = GET_COLOR_OCCUPIED(p, color ^ 8);
+    uint64_t occupied = own_pieces | opponent_pieces;
     uint64_t opponent_attacks = generate_attacks_xray(p, color, king_bb);
     uint64_t pinned_pieces = 0;
     uint64_t pin_rays[64] = {0};
 
-    // build a bitboad of attacked squares
+    // build a bitboard of attacked squares
 
     // identify attackers
-    FOREACH_SET_BIT(p->bitboards[opp | PIECE_QUEEN], queen) {
-        if (get_queen_attacks(GET_OCCUPIED(p), queen) & (1ULL << king_sq)) {
-            attackers++;
-            attacker_sq = queen;
-        }
-    }
-
-    FOREACH_SET_BIT(p->bitboards[opp | PIECE_ROOK], rook) {
-        if (get_rook_attacks(GET_OCCUPIED(p), rook) & (1ULL << king_sq)) {
+    FOREACH_SET_BIT(p->bitboards[opp | PIECE_ROOK] |
+                        p->bitboards[opp | PIECE_QUEEN],
+                    rook) {
+        if (get_rook_attacks(occupied, rook) & (1ULL << king_sq)) {
             attackers++;
             attacker_sq = rook;
         }
     }
 
-    FOREACH_SET_BIT(p->bitboards[opp | PIECE_BISHOP], bishop) {
-        if (get_bishop_attacks(GET_OCCUPIED(p), bishop) & (1ULL << king_sq)) {
+    FOREACH_SET_BIT(p->bitboards[opp | PIECE_BISHOP] |
+                        p->bitboards[opp | PIECE_QUEEN],
+                    bishop) {
+        if (get_bishop_attacks(occupied, bishop) & (1ULL << king_sq)) {
             attackers++;
             attacker_sq = bishop;
         }
@@ -414,12 +411,18 @@ int generate_evasive_moves(Position *p, Move *arr) {
     // printf("%i\n", attacker_sq);
 
     // Generate pins
-    DETECT_PINS(PIECE_BISHOP, p->bitboards[opp | PIECE_BISHOP], bishop)
-    DETECT_PINS(PIECE_ROOK, p->bitboards[opp | PIECE_ROOK], rook)
-    DETECT_PINS(PIECE_QUEEN, p->bitboards[opp | PIECE_QUEEN], queen)
+    DETECT_PINS(PIECE_BISHOP,
+                p->bitboards[opp | PIECE_BISHOP] |
+                    p->bitboards[opp | PIECE_QUEEN],
+                bishop)
+    DETECT_PINS(
+        PIECE_ROOK,
+        p->bitboards[opp | PIECE_ROOK] | p->bitboards[opp | PIECE_QUEEN], rook)
 
     uint64_t occupancy = own_pieces | opponent_pieces;
-    FOREACH_SET_BIT(p->bitboards[color | PIECE_BISHOP], from) {
+    FOREACH_SET_BIT(p->bitboards[color | PIECE_BISHOP] |
+                        p->bitboards[color | PIECE_QUEEN],
+                    from) {
         uint64_t moves = get_bishop_attacks(occupancy, from);
         if (pinned_pieces & (1ULL << from)) {
             moves &= pin_rays[from];
@@ -431,20 +434,10 @@ int generate_evasive_moves(Position *p, Move *arr) {
         }
     }
 
-    FOREACH_SET_BIT(p->bitboards[color | PIECE_ROOK], from) {
+    FOREACH_SET_BIT(p->bitboards[color | PIECE_ROOK] |
+                        p->bitboards[color | PIECE_QUEEN],
+                    from) {
         uint64_t moves = get_rook_attacks(occupancy, from);
-        if (pinned_pieces & (1ULL << from)) {
-            moves &= pin_rays[from];
-        }
-
-        moves &= block_bb;
-        FOREACH_SET_BIT(moves, to) {
-            arr[moves_count++] = ENCODE_MOVE(from, to, 0);
-        }
-    }
-
-    FOREACH_SET_BIT(p->bitboards[color | PIECE_QUEEN], from) {
-        uint64_t moves = get_queen_attacks(occupancy, from);
         if (pinned_pieces & (1ULL << from)) {
             moves &= pin_rays[from];
         }
@@ -533,6 +526,7 @@ int generate_moves(Position *p, Move *arr) {
     int opp = color ^ 8;
     uint64_t own_pieces = GET_COLOR_OCCUPIED(p, color);
     uint64_t opponent_pieces = GET_COLOR_OCCUPIED(p, color ^ 8);
+    uint64_t all_pieces = own_pieces | opponent_pieces;
     uint64_t opponent_attacks = generate_attacks(p, color ^ 8);
     uint64_t pinned_pieces = 0;
     uint64_t pin_rays[64] = {0};
@@ -549,7 +543,7 @@ int generate_moves(Position *p, Move *arr) {
 
     // Generate pawn moves
     uint64_t pawns = p->bitboards[color | PIECE_PAWN];
-    uint64_t empty = ~GET_OCCUPIED(p);
+    uint64_t empty = ~all_pieces;
     uint64_t single_push =
         (color == PIECE_WHITE) ? (pawns << 8) & empty : (pawns >> 8) & empty;
     uint64_t rank = (color == PIECE_WHITE) ? RANK_3 : RANK_6;
@@ -640,9 +634,12 @@ int generate_moves(Position *p, Move *arr) {
     }
 
     uint64_t occupancy = own_pieces | opponent_pieces;
-    ADD_SLIDER_MOVES(p->bitboards[color | PIECE_BISHOP], get_bishop_attacks)
-    ADD_SLIDER_MOVES(p->bitboards[color | PIECE_ROOK], get_rook_attacks)
-    ADD_SLIDER_MOVES(p->bitboards[color | PIECE_QUEEN], get_queen_attacks)
+    ADD_SLIDER_MOVES(p->bitboards[color | PIECE_BISHOP] |
+                         p->bitboards[color | PIECE_QUEEN],
+                     get_bishop_attacks)
+    ADD_SLIDER_MOVES(p->bitboards[color | PIECE_ROOK] |
+                         p->bitboards[color | PIECE_QUEEN],
+                     get_rook_attacks)
 
     return moves_count;
 }

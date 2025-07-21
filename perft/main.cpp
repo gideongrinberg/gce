@@ -208,9 +208,10 @@ PerftResult runTest(PerftTest *test) {
     }
 
     std::string finalStatus = success ? "succeeded" : "failed";
-    std::cout << "\n," << COLOR_BOLD << SC(success) << "Test " << test->name
-              << " " << finalStatus << " in " << totalWall << " seconds"
-              << COLOR_RESET << "\n"
+    std::cout << "\n"
+              << COLOR_BOLD << SC(success) << "Test " << test->name << " "
+              << finalStatus << " in " << totalWall << " seconds" << COLOR_RESET
+              << "\n"
               << std::endl;
 
     return PerftResult(success, totalNodes, totalWall, *test);

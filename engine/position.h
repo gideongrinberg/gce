@@ -58,8 +58,9 @@ enum { ONGOING = 0, CHECKMATE = 1, DRAW = 2, STALEMATE = 3 };
 typedef struct {
     uint64_t bitboards[MAX_PIECE];
     uint64_t en_passant;
-    CastlingRights castling_rights;
     int moves;
+
+    CastlingRights castling_rights;
     int halfmoves;
 } Position;
 
