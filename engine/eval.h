@@ -5,6 +5,7 @@
 #ifndef EVAL_H
 #define EVAL_H
 #include "position.h"
+#define INF 10000000
 extern const int piece_tables[6][64];
 extern const int piece_values[6];
 int eval_position(Position *pos);
