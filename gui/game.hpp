@@ -12,7 +12,7 @@ enum GameState : int { IN_PROGRESS, NEW_GAME, GAME_OVER };
 enum GameMode : int { LOCAL_MP, ENGINE };
 class Game {
   public:
-    Game();
+    Game(int width, int height);
 
     void setup();
     void render();
@@ -27,6 +27,7 @@ class Game {
 #endif
 
   private:
+    int width, height;
     void drawViewport();
 
     std::vector<std::unique_ptr<GuiWindow>> windows;

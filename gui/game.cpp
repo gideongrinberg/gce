@@ -2,7 +2,6 @@
 
 #include "assets.h"
 #include "board.hpp"
-#include "imgui_internal.h"
 #include "info.hpp"
 #include "modals.hpp"
 #include "rlImGui.h"
@@ -11,7 +10,8 @@
 #include <memory>
 #include <vector>
 
-Game::Game() : state(NEW_GAME) {
+Game::Game(int width, int height)
+    : width(width), height(height), state(NEW_GAME) {
     position = *position_from_fen(
         "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
@@ -25,10 +25,13 @@ Game::Game() : state(NEW_GAME) {
 }
 
 void Game::setup() {
-    int screenWidth = 800, screenHeight = 600;
+#ifndef EMSCRIPTEN
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_MSAA_4X_HINT);
-    InitWindow(screenWidth, screenHeight, "Gideon's Chess Engine (v0.2.0)");
+#endif
+    InitWindow(width, height, "Gideon's Chess Engine (v0.2.0)");
+#ifndef EMSCRIPTEN
     SetTargetFPS(60);
+#endif
     loadPieceTextures();
 
     rlImGuiSetup(true);

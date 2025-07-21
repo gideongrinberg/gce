@@ -2,10 +2,18 @@
 #include "game.hpp"
 #include "textures.h"
 #include <iostream>
+#ifdef EMSCRIPTEN
+#include <emscripten/emscripten.h>
+#else
 #include <thread>
+#endif
 
 #define SELECTED_COLOR (Color){72, 118, 255, 180}
 #define LEGAL_COLOR (Color){255, 0, 255, 128}
+
+// -1 = no, 0 = started, 1 = done
+static std::atomic engineStatus = -1;
+static std::optional<Move> bestMove;
 
 Color hslToRgb(float h, float s, float l, unsigned char alpha = 255);
 void Board::draw() const {
@@ -134,10 +142,8 @@ void Board::handleInput(const ImVec2 &boardTopLeft, const ImVec2 &boardSize) {
             }
         } else if (legalMoves & (1ULL << clicked)) {
             if (promoMoves & (1ULL << clicked)) {
-                std::cout << "promo" << std::endl;
                 pendingPromo = PendingPromotion{selectedSq, clicked, true};
                 ImGui::OpenPopup("Promo");
-                std::cout << pendingPromo.display << std::endl;
             } else {
                 execute_move(&game.position,
                              ENCODE_MOVE(selectedSq, clicked, 0));
@@ -149,22 +155,22 @@ void Board::handleInput(const ImVec2 &boardTopLeft, const ImVec2 &boardSize) {
     }
 }
 
+void getBestMove(void *arg) {
+    auto game = static_cast<Game *>(arg);
+    bestMove = get_best_move(&game->position, 5);
+    engineStatus = 1;
+}
 void Board::update() {
-    // static int lastEngineMove = -1;
-    // -1 = no, 0 = started, 1 = done
-    static int engineStatus = -1;
-    static std::optional<Move> bestMove;
     int sideToMove = game.position.moves % 2 == 0 ? PIECE_WHITE : PIECE_BLACK;
-
     // make engine move
     if (game.mode == ENGINE && sideToMove != game.playerColor) {
         if (engineStatus == -1) {
-            // todo: use async in emscripten build
-            std::thread([this] {
-                engineStatus = 0;
-                bestMove = get_best_move(&game.position, 5);
-                engineStatus = 1;
-            }).detach();
+            engineStatus = 0;
+#ifdef EMSCRIPTEN
+            emscripten_async_call(getBestMove, &game, 0);
+#else
+            std::thread([this] { getBestMove(&game); }).detach();
+#endif
         } else if (engineStatus == 1 && bestMove.has_value()) {
             execute_move(&game.position, bestMove.value());
             bestMove = std::nullopt;
