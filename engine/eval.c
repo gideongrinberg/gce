@@ -49,6 +49,19 @@ const int piece_tables[6][64] = {
 int eval_position(Position *p) {
     int eval = 0;
 
+    int side_to_move = p->moves % 2 == 0 ? PIECE_WHITE : PIECE_BLACK;
+    if (generate_attacks(p, side_to_move ^ 8) &
+        p->bitboards[PIECE_KING | side_to_move]) {
+        Move moves[256];
+        if (generate_moves(p, moves) == 0) {
+            if (side_to_move == PIECE_WHITE) {
+                return -INF + 1;
+            } else {
+                return INF - 1;
+            }
+        }
+    }
+
     const int colors[2] = {PIECE_WHITE, PIECE_BLACK};
     for (int piece = PIECE_PAWN; piece <= PIECE_KING; piece++) {
         eval += piece_values[piece] *

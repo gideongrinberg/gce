@@ -11,7 +11,6 @@ int search(Position *pos, int depth, int alpha, int beta, bool maximizing,
 
     Move moves[256];
     int num_moves = generate_moves(pos, moves);
-
     if (maximizing) {
         int value = -INF;
         for (int i = 0; i < num_moves; i++) {

@@ -147,7 +147,7 @@ int main() {
         }
 
         if (input.starts_with("go")) {
-            Move move = get_best_move(position, 5);
+            Move move = get_best_move(position, 7);
             Position copy = *position;
             execute_move(&copy, move);
             sendMessage("info depth 10 score cp %d", eval_position(&copy));
