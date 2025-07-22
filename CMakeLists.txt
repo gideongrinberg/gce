@@ -118,7 +118,7 @@ if (BUILD_GUI)
             gui/polyglot.hpp
             gui/polyglot.cpp)
 
-    target_link_libraries(gce-gui PRIVATE gce-core raylib imgui)
+    target_link_libraries(gce-gui PRIVATE gce-core raylib imgui nlohmann_json::nlohmann_json)
     if (EMSCRIPTEN)
         set_target_properties(gce-gui PROPERTIES OUTPUT_NAME "index")
     endif ()

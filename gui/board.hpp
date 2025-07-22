@@ -30,12 +30,14 @@ class Board : public GuiWindow {
     void render() override;
 
   private:
+    void executeMove(Move move);
+    static int getClicked(const ImVec2 &boardTopLeft, const ImVec2 &boardSize);
+
     std::array<RenderTexture2D, MAX_PIECE> pieceTextures;
     int selectedSq;
     uint64_t legalMoves;
     uint64_t promoMoves;
     PendingPromotion pendingPromo;
-    static int getClicked(const ImVec2 &boardTopLeft, const ImVec2 &boardSize);
 };
 
 inline Vector2 squareToScreen(int square, int tileSize) {

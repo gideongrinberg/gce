@@ -110,9 +110,8 @@ void Board::handleInput(const ImVec2 &boardTopLeft, const ImVec2 &boardSize) {
         if (ImGui::RadioButton("Queen", promotionChoice == 4))
             promotionChoice = 4;
         if (ImGui::Button("Ok")) {
-            execute_move(&game.position,
-                         ENCODE_MOVE(pendingPromo.from, pendingPromo.to,
-                                     promotionChoice));
+            executeMove(ENCODE_MOVE(pendingPromo.from, pendingPromo.to,
+                                    promotionChoice));
             pendingPromo.display = false;
             selectedSq = -1;
             legalMoves = 0;
@@ -145,8 +144,7 @@ void Board::handleInput(const ImVec2 &boardTopLeft, const ImVec2 &boardSize) {
                 pendingPromo = PendingPromotion{selectedSq, clicked, true};
                 ImGui::OpenPopup("Promo");
             } else {
-                execute_move(&game.position,
-                             ENCODE_MOVE(selectedSq, clicked, 0));
+                executeMove(ENCODE_MOVE(selectedSq, clicked, 0));
                 legalMoves = 0;
                 promoMoves = 0;
                 selectedSq = -1;
@@ -173,6 +171,51 @@ void getBestMove(void *arg) {
     engineStatus = 1;
 }
 
+std::string moveToString(Move move) {
+    int from = MOVE_FROM(move);
+    int to = MOVE_TO(move);
+    int promo = MOVE_PROMO(move);
+
+    auto sqToStr = [](int sq) {
+        char file = 'a' + (sq % 8);
+        char rank = '1' + (sq / 8);
+        return std::string{file, rank};
+    };
+
+    std::string uci = sqToStr(from) + sqToStr(to);
+
+    if (promo != 0) {
+        char promoChar = 'q'; // fallback/default
+        switch (promo) {
+        case 1:
+            promoChar = 'n';
+            break;
+        case 2:
+            promoChar = 'b';
+            break;
+        case 3:
+            promoChar = 'r';
+            break;
+        case 4:
+            promoChar = 'q';
+            break;
+        }
+
+        uci += promoChar;
+    }
+
+    return uci;
+}
+
+void Board::executeMove(Move move) {
+    execute_move(&game.position, move);
+    if (game.moves.empty()) {
+        game.moves = moveToString(move);
+    } else {
+        game.moves += " " + moveToString(move);
+    }
+}
+
 void Board::update() {
     int sideToMove = game.position.moves % 2 == 0 ? PIECE_WHITE : PIECE_BLACK;
     // make engine move
@@ -185,7 +228,7 @@ void Board::update() {
             std::thread([this] { getBestMove(&game); }).detach();
 #endif
         } else if (engineStatus == 1 && bestMove.has_value()) {
-            execute_move(&game.position, bestMove.value());
+            executeMove(bestMove.value());
             bestMove = std::nullopt;
             engineStatus = -1;
             // lastEngineMove = game.position.moves + 1;

@@ -1,9 +1,12 @@
 #ifndef INFO_HPP
 #define INFO_HPP
+#include "assets.h"
 #include "engine.h"
 #include "imgui.h"
+#include "nlohmann/json.hpp"
 #include "window.hpp"
 #include <cstring>
+#include <iostream>
 #include <string>
 
 class InfoWindow : public GuiWindow {
@@ -11,10 +14,19 @@ class InfoWindow : public GuiWindow {
     explicit InfoWindow(Game &game) : GuiWindow(game) {
         std::strcpy(fenBuffer,
                     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+
+        std::string json_str(reinterpret_cast<const char *>(openings_json),
+                             openings_json_len);
+        openings = nlohmann::json::parse(json_str);
     };
 
     void render() override {
         ImGui::Begin("Info");
+
+        if (!game.moves.empty() && openings.contains(game.moves)) {
+            currentOpening = openings[game.moves];
+        }
+        ImGui::Text(currentOpening.c_str());
         ImGui::InputText("FEN", fenBuffer, sizeof(fenBuffer));
         if (ImGui::Button("Load FEN")) {
             if (Position *newPos = position_from_fen(fenBuffer)) {
@@ -39,6 +51,8 @@ class InfoWindow : public GuiWindow {
     }
 
   private:
+    nlohmann::json openings;
+    std::string currentOpening{};
     char fenBuffer[256]{};
 };
 #endif // INFO_HPP
