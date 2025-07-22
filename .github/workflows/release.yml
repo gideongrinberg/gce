@@ -26,6 +26,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libasound2-dev libx11-dev libxrandr-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev libxinerama-dev libwayland-dev libxkbcommon-dev
 
+      - name: Generate headers
+        run: python tools/build_assets.py && python tools/generate_tables.py
+
       - name: Build and package
         run: chmod +x ./tools/build_release.sh && ./tools/build_release.sh
 
@@ -40,3 +43,37 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: gce-*.tar.gz
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate headers
+        run: python tools/build_assets.py && python tools/generate_tables.py
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DENABLE_PACKAGING=ON
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Install
+        run: cmake --install build --prefix dist
+
+      - name: Archive binary
+        run: |
+          Rename-Item dist\bin gce-windows-x64
+          Compress-Archive -Path gce-windows-x64 -DestinationPath gce-windows-x64.zip
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-build
+          path: gce-*.zip
+
+      - name: Upload to GitHub Release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: gce-windows-x64.zip
