@@ -7,6 +7,7 @@
 #include "window.hpp"
 
 #include <memory>
+#include <string>
 #include <vector>
 
 enum GameState : int { IN_PROGRESS, NEW_GAME, GAME_OVER };
