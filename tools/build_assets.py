@@ -9,7 +9,7 @@ def sanitize_symbol(name):
 
 res_dir = pathlib.Path(__file__).resolve().parent / ".." / "gui" / "assets"
 all_files = lambda ext: glob.glob((res_dir / f"*.{ext}").as_posix())
-files = all_files('png') + all_files('ttf') + all_files('ini')
+files = all_files('png') + all_files('ttf') + all_files('ini') + all_files('bin')
 header_path = res_dir.parent / "assets.h"
 source_path = res_dir.parent / "assets.c"
 

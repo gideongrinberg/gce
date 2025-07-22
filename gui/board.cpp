@@ -157,9 +157,22 @@ void Board::handleInput(const ImVec2 &boardTopLeft, const ImVec2 &boardSize) {
 
 void getBestMove(void *arg) {
     auto game = static_cast<Game *>(arg);
+    if (game->onBook) {
+        Move move = game->book.getMove(&game->position);
+        if (move == 0) {
+            game->onBook = false;
+        } else {
+            bestMove = move;
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+            engineStatus = 1;
+            return;
+        }
+    }
+
     bestMove = get_best_move(&game->position, 5);
     engineStatus = 1;
 }
+
 void Board::update() {
     int sideToMove = game.position.moves % 2 == 0 ? PIECE_WHITE : PIECE_BLACK;
     // make engine move

@@ -69,7 +69,11 @@ if (BUILD_GUI)
             ${rlImgui_SOURCE_DIR}
             ${raylib_SOURCE_DIR}/src
     )
+
+    FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz)
+    FetchContent_MakeAvailable(json)
 endif ()
+
 add_library(gce-core STATIC engine/position.c engine/position.h engine/tables.c engine/tables.h
         engine/engine.h engine/zobrist.h engine/zobrist.c
         engine/eval.c
@@ -110,7 +114,9 @@ if (BUILD_GUI)
             gui/info.hpp
             gui/game.cpp
             gui/modals.cpp
-            gui/modals.hpp)
+            gui/modals.hpp
+            gui/polyglot.hpp
+            gui/polyglot.cpp)
 
     target_link_libraries(gce-gui PRIVATE gce-core raylib imgui)
     if (EMSCRIPTEN)

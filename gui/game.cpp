@@ -11,7 +11,8 @@
 #include <vector>
 
 Game::Game(int width, int height)
-    : width(width), height(height), state(NEW_GAME) {
+    : width(width), height(height), state(NEW_GAME),
+      book(PolyglotBook(human_bin, human_bin_len)), onBook(true) {
     position = *position_from_fen(
         "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 

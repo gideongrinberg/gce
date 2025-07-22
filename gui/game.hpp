@@ -2,6 +2,7 @@
 #define GAME_HPP
 
 #include "engine.h"
+#include "polyglot.hpp"
 #include "raylib.h"
 #include "window.hpp"
 
@@ -17,6 +18,9 @@ class Game {
     void setup();
     void render();
 
+    PolyglotBook book;
+    bool onBook;
+    std::string moves;
     GameMode mode;
     GameState state;
     Position position;
