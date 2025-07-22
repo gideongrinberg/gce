@@ -1,7 +1,10 @@
 #include "engine.h"
 #include "logger.hpp"
 #include <cstdlib>
+#include <deque>
 #include <iostream>
+#include <string>
+#include <vector>
 
 static auto logger = Logger(std::string(getenv("HOME")) + "/gce-uci.log");
 

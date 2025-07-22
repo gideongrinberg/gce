@@ -6,6 +6,9 @@
 #include <vector>
 
 struct PolyglotEntry {
+    PolyglotEntry(uint64_t key, uint16_t move, uint16_t weight, uint32_t learn)
+        : key(key), move(move), weight(weight), learn(learn) {}
+
     uint64_t key;
     uint16_t move;
     uint16_t weight;

@@ -13,6 +13,18 @@ option(BUILD_UCI "Build the UCI interface" ON)
 option(BUILD_PERFT "Build perft test executable" ON)
 option(BUILD_TESTS "Build unit tests" OFF)
 
+option(ENABLE_PACKAGING "Enable packaging with CPack" OFF)
+if (ENABLE_PACKAGING)
+    include(InstallRequiredSystemLibraries)
+
+    set(CPACK_PACKAGE_NAME "gce")
+    set(CPACK_PACKAGE_VERSION "1.0.0")
+    set(CPACK_GENERATOR "TGZ")
+
+    include(CPack)
+    set(INSTALL OFF CACHE BOOL "" FORCE) # prevent raylib from installing
+endif ()
+
 if (EMSCRIPTEN)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-command-line-argument -s USE_GLFW=3 -s WASM=1 -s ASYNCIFY -s GL_ENABLE_GET_PROC_ADDRESS=1")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wno-unused-command-line-argument -s USE_GLFW=3 -s WASM=1 -s ASYNCIFY -s GL_ENABLE_GET_PROC_ADDRESS=1 -s EXPORTED_RUNTIME_METHODS=ccall,cwrap")
@@ -81,16 +93,28 @@ add_library(gce-core STATIC engine/position.c engine/position.h engine/tables.c 
         engine/search.c
         engine/search.h)
 target_include_directories(gce-core PUBLIC engine/)
+if (ENABLE_PACKAGING)
+    install(TARGETS gce-core
+            ARCHIVE DESTINATION lib
+            LIBRARY DESTINATION lib
+            RUNTIME DESTINATION bin)
+endif ()
 
 if (NOT EMSCRIPTEN)
     if (BUILD_PERFT)
         add_executable(gce-perft perft/main.cpp)
         target_link_libraries(gce-perft gce-core)
+        if (ENABLE_PACKAGING)
+            install(TARGETS gce-perft RUNTIME DESTINATION bin)
+        endif ()
     endif ()
 
     if (BUILD_UCI)
         add_executable(gce-uci uci/main.cpp uci/logger.hpp)
         target_link_libraries(gce-uci PUBLIC gce-core)
+        if (ENABLE_PACKAGING)
+            install(TARGETS gce-uci RUNTIME DESTINATION bin)
+        endif ()
     endif ()
 
     if (BUILD_TESTS)
@@ -100,7 +124,6 @@ if (NOT EMSCRIPTEN)
 endif ()
 
 if (BUILD_GUI)
-
     add_executable(gce-gui
             gui/main.cpp
             gui/board.hpp
@@ -121,6 +144,9 @@ if (BUILD_GUI)
     target_link_libraries(gce-gui PRIVATE gce-core raylib imgui nlohmann_json::nlohmann_json)
     if (EMSCRIPTEN)
         set_target_properties(gce-gui PROPERTIES OUTPUT_NAME "index")
+    endif ()
+    if (ENABLE_PACKAGING)
+        install(TARGETS gce-gui RUNTIME DESTINATION bin)
     endif ()
 
     if (APPLE) # raylib stuff for mac
