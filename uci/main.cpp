@@ -1,13 +1,18 @@
 #include "engine.h"
 #include "logger.hpp"
+#include <cstdarg>
 #include <cstdlib>
 #include <deque>
 #include <iostream>
 #include <string>
 #include <vector>
 
-static auto logger = Logger(std::string(getenv("HOME")) + "/gce-uci.log");
 
+#ifdef _WIN32
+static auto logger = Logger("gce-uci.log");
+#else
+static auto logger = Logger(std::string(getenv("HOME")) + "/gce-uci.log");
+#endif
 void flush() { std::cout << std::flush; }
 void sendMessage(const char *fmt, ...) {
     char buf[1024];

@@ -5,6 +5,7 @@
 #include "imgui.h"
 #include "nlohmann/json.hpp"
 #include "window.hpp"
+#include <cstdarg>
 #include <cstring>
 #include <iostream>
 #include <string>
@@ -26,8 +27,14 @@ class InfoWindow : public GuiWindow {
         if (!game.moves.empty() && openings.contains(game.moves)) {
             currentOpening = openings[game.moves];
         }
-        ImGui::Text(currentOpening.c_str());
-        ImGui::InputText("FEN", fenBuffer, sizeof(fenBuffer));
+
+        if (!currentOpening.empty()) {
+            ImGui::Text("%s (%s book)", currentOpening.c_str(),
+                        game.onBook ? "on" : "off");
+        }
+
+        ImGui::InputText("##", fenBuffer, sizeof(fenBuffer));
+        ImGui::SameLine();
         if (ImGui::Button("Load FEN")) {
             if (Position *newPos = position_from_fen(fenBuffer)) {
                 game.position = *newPos;

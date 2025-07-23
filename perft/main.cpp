@@ -1,9 +1,11 @@
 #include "engine.h"
 #include <cstdio>
 #include <cstdlib>
-#include <ctime>
+#include <cstring>
+#include <chrono>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -158,12 +160,9 @@ class PerftResult {
 };
 
 // some utilities for testing
-extern "C" {
-double getTime(clockid_t clk_id) {
-    struct timespec ts;
-    clock_gettime(clk_id, &ts);
-    return (double)ts.tv_sec + (double)ts.tv_nsec / 1e9;
-}
+double getTime() {
+    using namespace std::chrono;
+    return duration<double>(steady_clock::now().time_since_epoch()).count();
 }
 
 std::string trim(const std::string &s) {
@@ -191,9 +190,9 @@ PerftResult runTest(PerftTest *test) {
 
     for (int i = 0; i < test->expected.size(); i++) {
         int depth = i + 1;
-        double wallStart = getTime(CLOCK_MONOTONIC);
+        double wallStart = getTime();
         int result = perft(p, depth);
-        double wallEnd = getTime(CLOCK_MONOTONIC);
+        double wallEnd = getTime();
         double wallTime = wallEnd - wallStart;
         totalWall += wallTime;
 

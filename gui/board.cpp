@@ -2,6 +2,10 @@
 #include "game.hpp"
 #include "textures.h"
 #include <iostream>
+#include <optional>
+#include <algorithm>
+#include <cmath>
+
 #ifdef EMSCRIPTEN
 #include <emscripten/emscripten.h>
 #else
