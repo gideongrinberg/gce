@@ -8,6 +8,7 @@ include(FetchContent)
 
 set(CMAKE_C_FLAGS_RELEASE "-O3")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(BUILD_GUI "Build the GUI" ON)
 option(BUILD_UCI "Build the UCI interface" ON)

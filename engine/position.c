@@ -74,7 +74,7 @@ Position *position_from_fen(const char *fen_string) {
     // skip color to move (implied by move count)
     const char *side_to_move = strtok(NULL, " ");
     fen = strtok(NULL, " ");
-    if (fen == "-") {
+    if (strcmp(fen, "-") == 0) {
         p->castling_rights = 0;
     } else {
         for (int i = 0; fen[i] != '\0'; i++) {
@@ -654,6 +654,8 @@ void execute_move(Position *p, Move move) {
 
     uint64_t from_bb = 1ULL << MOVE_FROM(move);
     uint64_t to_bb = 1ULL << MOVE_TO(move);
+    bool capture = false;
+
     // handle castling
     if (p->bitboards[color | PIECE_KING] & from_bb) {
         moving_piece = PIECE_KING;
@@ -707,7 +709,6 @@ void execute_move(Position *p, Move move) {
     }
 
     // handle capture
-    bool capture = false;
     // ep capture
     if (moving_piece == PIECE_PAWN && to_bb == p->en_passant) {
         capture = true;

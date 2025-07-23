@@ -58,7 +58,7 @@ int search(Position *pos, int depth, int alpha, int beta, bool maximizing,
     }
 }
 Move get_best_move(Position *pos, int depth) {
-    Move best_move;
+    Move best_move = 0;
     search(pos, depth, -INF, INF, pos->moves % 2 == 0, true, &best_move);
     return best_move;
 }
