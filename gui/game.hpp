@@ -15,6 +15,7 @@ enum GameMode : int { LOCAL_MP, ENGINE };
 class Game {
   public:
     Game(int width, int height);
+    ~Game();
 
     void setup();
     void render();

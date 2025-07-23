@@ -7,12 +7,12 @@
 #include <string>
 #include <vector>
 
-
 #ifdef _WIN32
 static auto logger = Logger("gce-uci.log");
 #else
 static auto logger = Logger(std::string(getenv("HOME")) + "/gce-uci.log");
 #endif
+
 void flush() { std::cout << std::flush; }
 void sendMessage(const char *fmt, ...) {
     char buf[1024];
@@ -125,16 +125,68 @@ Position *parsePosition(std::string input) {
     return position;
 }
 
+void parseGo(std::string input, Position *position) {
+    std::vector<std::string> argv = splitStr(input);
+    auto args = std::deque(argv.begin(), argv.end());
+    args.pop_front();
+
+    float time_available = 0;
+    float increment = 0;
+    int moves_to_go = 0;
+    int depth = -1;
+    float move_time = -1;
+
+    while (!args.empty() && !args.front().empty()) {
+        std::string arg = args.front();
+        args.pop_front();
+        std::string value = args.front();
+        args.pop_front();
+
+        bool white = position->moves % 2 == 0;
+        if ((arg == "wtime" && white) || (arg == "btime" && !white)) {
+            time_available = std::stof(value);
+        } else if ((arg == "winc" && white) || (arg == "binc" && !white)) {
+            increment = std::stof(value);
+        } else if (arg == "movestogo") {
+            moves_to_go = std::stoi(value);
+        } else if (arg == "movetime") {
+            move_time = std::stof(value);
+        } else if (arg == "depth") {
+            depth = std::stoi(value);
+        }
+    }
+
+    if (time_available == 0 && moves_to_go == 0 && depth == -1 &&
+        move_time == -1) {
+        logger.log(
+            "Got `go` command with no valid args, falling back to depth 7.");
+
+        depth = 7;
+    }
+
+    int result_depth, result_eval;
+    Move result_move;
+
+    get_best_move_ex(position, time_available, increment, moves_to_go, depth,
+                     move_time, &result_move, &result_depth, &result_eval);
+
+    sendMessage("info depth %i score cp %d", result_depth, result_eval);
+    sendMessage("bestmove %s", formatMove(result_move).c_str());
+}
 int main() {
     logger.log("Started");
     std::string input;
     Position *position = nullptr;
 
+    if (!init_tt()) {
+        logger.log("Failed to allocate memory for transposition table");
+        exit(-1);
+    }
+
     while (std::getline(std::cin, input)) {
         logger.log("Got command: ", input.c_str());
         if (input == "quit") {
-            logger.log("Goodbye");
-            exit(0);
+            goto cleanup;
         }
 
         if (input == "uci") {
@@ -155,12 +207,13 @@ int main() {
         }
 
         if (input.starts_with("go")) {
-            Move move = get_best_move(position, 7);
-            Position copy = *position;
-            execute_move(&copy, move);
-            sendMessage("info depth 10 score cp %d", eval_position(&copy));
-            sendMessage("bestmove %s", formatMove(move).c_str());
-            flush();
+            parseGo(input, position);
         }
     }
+
+cleanup:
+    logger.log("Goodbye");
+    free_tt();
+    logger.log("Freed transposition table.");
+    exit(0);
 }

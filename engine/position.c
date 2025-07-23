@@ -8,6 +8,12 @@
 
 #include <string.h>
 
+#ifdef NDEBUG
+#define DEBUG(...) ((void)0)
+#else
+#define DEBUG(...) printf(__VA_ARGS__)
+#endif
+
 // Masks to isolate a specific rank or file of a bitboard
 #define RANK_2 0x000000000000FF00ULL
 #define RANK_3 0x0000000000FF0000ULL
@@ -332,6 +338,7 @@ uint64_t generate_attacks_xray(Position *p, int color, uint64_t king_bb) {
 }
 
 int generate_evasive_moves(Position *p, Move *arr) {
+    DEBUG("Generating evasive moves");
     int moves_count = 0;
     int color = p->moves % 2 == 0 ? PIECE_WHITE : PIECE_BLACK;
     int opp = color ^ 8;
@@ -411,13 +418,9 @@ int generate_evasive_moves(Position *p, Move *arr) {
     // printf("%i\n", attacker_sq);
 
     // Generate pins
-    DETECT_PINS(PIECE_BISHOP,
-                p->bitboards[opp | PIECE_BISHOP] |
-                    p->bitboards[opp | PIECE_QUEEN],
-                bishop)
-    DETECT_PINS(
-        PIECE_ROOK,
-        p->bitboards[opp | PIECE_ROOK] | p->bitboards[opp | PIECE_QUEEN], rook)
+    DETECT_PINS(PIECE_BISHOP, p->bitboards[opp | PIECE_BISHOP], bishop)
+    DETECT_PINS(PIECE_ROOK, p->bitboards[opp | PIECE_ROOK], rook)
+    DETECT_PINS(PIECE_QUEEN, p->bitboards[opp | PIECE_QUEEN], queen)
 
     uint64_t occupancy = own_pieces | opponent_pieces;
     FOREACH_SET_BIT(p->bitboards[color | PIECE_BISHOP] |
@@ -517,10 +520,12 @@ int generate_evasive_moves(Position *p, Move *arr) {
     add_pawn_moves(left_captures, shift_left, arr, &moves_count);
     add_pawn_moves(right_captures, shift_right, arr, &moves_count);
 
+    DEBUG("Generated %i evasive moves\n", moves_count);
     return moves_count;
 }
 
 int generate_moves(Position *p, Move *arr) {
+    DEBUG("Generating moves\n");
     int moves_count = 0;
     int color = p->moves % 2 == 0 ? PIECE_WHITE : PIECE_BLACK;
     int opp = color ^ 8;
@@ -698,6 +703,7 @@ void execute_move(Position *p, Move move) {
     }
 
     if (moving_piece == -1) {
+        DEBUG("Illegal move: %i to %i\n", MOVE_FROM(move), MOVE_TO(move));
         return;
     }
 

@@ -16,6 +16,11 @@ Game::Game(int width, int height)
     position = *position_from_fen(
         "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
+    if (!init_tt()) {
+        std::cerr << "Failed to initialize transposition table" << std::endl;
+        exit(-1);
+    }
+
     setup();
     windows.push_back(std::make_unique<Board>(*this));
     windows.push_back(std::make_unique<InfoWindow>(*this));
@@ -23,6 +28,11 @@ Game::Game(int width, int height)
 #ifndef NDEBUG
     showPst = -1;
 #endif
+}
+
+Game::~Game() {
+    free_tt();
+    unloadPieceTextures();
 }
 
 void Game::setup() {

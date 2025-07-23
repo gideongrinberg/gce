@@ -34,5 +34,4 @@ int main() {
         mainLoop(game.get());
     }
 #endif
-    unloadPieceTextures();
 }
