@@ -90,10 +90,15 @@ jobs:
           export PATH="/ucrt64/bin:$PATH"
           cmake --install build --prefix dist
 
+
       - name: Archive binary
         run: |
           export PATH="/ucrt64/bin:$PATH"
           mv dist/bin gce-windows-x64
+          cp /ucrt64/bin/libstdc++-6.dll gce-windows-x64/
+          cp /ucrt64/bin/libgcc_s_seh-1.dll gce-windows-x64/
+          cp /ucrt64/bin/libwinpthread-1.dll gce-windows-x64/
+
           zip -r gce-windows-x64.zip gce-windows-x64
 
       - name: Upload artifacts
