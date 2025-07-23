@@ -46,25 +46,55 @@ jobs:
 
   build-windows:
     runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
     steps:
+      - uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          install: >-
+            git
+            zip
+            python
+            base-devel
+            mingw-w64-ucrt-x86_64-toolchain
+            mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-ninja
+
       - uses: actions/checkout@v4
 
+      - name: Set up environment path for UCRT64
+        run: |
+          export PATH="/ucrt64/bin:$PATH"
+          which cmake
+          cmake --version
+
       - name: Generate headers
-        run: python tools/build_assets.py && python tools/generate_tables.py
+        run: |
+          export PATH="/ucrt64/bin:$PATH"
+          python tools/build_assets.py && python tools/generate_tables.py
 
       - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DENABLE_PACKAGING=ON
+        run: |
+          export PATH="/ucrt64/bin:$PATH"
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DENABLE_PACKAGING=ON
 
       - name: Build
-        run: cmake --build build --config Release
+        run: |
+          export PATH="/ucrt64/bin:$PATH"
+          cmake --build build
 
       - name: Install
-        run: cmake --install build --prefix dist
+        run: |
+          export PATH="/ucrt64/bin:$PATH"
+          cmake --install build --prefix dist
 
       - name: Archive binary
         run: |
-          Rename-Item dist\bin gce-windows-x64
-          Compress-Archive -Path gce-windows-x64 -DestinationPath gce-windows-x64.zip
+          export PATH="/ucrt64/bin:$PATH"
+          mv dist/bin gce-windows-x64
+          zip -r gce-windows-x64.zip gce-windows-x64
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
