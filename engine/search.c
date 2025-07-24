@@ -2,6 +2,7 @@
 #include "eval.h"
 #include "zobrist.h"
 
+#include <math.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <time.h>
@@ -138,6 +139,9 @@ double now() {
     return (double)ts.tv_sec + (double)ts.tv_nsec / 1000000000.0;
 }
 
+#define MAX_USAGE 0.4f
+#define SAFEGUARD 200.0f
+
 void get_best_move_ex(Position *pos, float time_available, float increment,
                       int moves_to_go, int depth, float move_time,
                       Move *result_move, int *result_depth, int *result_eval) {
@@ -150,27 +154,56 @@ void get_best_move_ex(Position *pos, float time_available, float increment,
         return;
     }
 
-    double target;
+    double target_ms;
     if (move_time != -1) {
-        target = move_time;
-    } else if (moves_to_go > 0) {
-        target = (time_available / moves_to_go) + (increment / 2);
+        target_ms = move_time * 1000;
     } else {
-        target = (time_available / 20) + (increment / 2);
+        // Emergency time handling
+        if (time_available < 500.0f) {
+            target_ms = 50.0f;
+        } else {
+            double base_time = time_available - SAFEGUARD;
+            if (base_time <= 0) {
+                target_ms = increment * MAX_USAGE;
+            } else {
+                if (moves_to_go <= 0) {
+                    moves_to_go = 25;
+                }
+
+                // Calculate time per move
+                double time_per_move = base_time / moves_to_go;
+                target_ms = (time_per_move * MAX_USAGE) + (increment * 0.8f);
+
+                // Ensure minimum and maximum bounds
+                target_ms = fmax(target_ms, 50.0f);
+                target_ms = fmin(target_ms, base_time * 0.4f);
+            }
+        }
     }
 
-    target /= 1000; // convert to seconds
-
+    double target = target_ms / 1000.0;
     const double start = now();
-    int curr_depth = 1;
     int curr_eval = 0;
     Move best_move;
-    do {
+
+    *result_eval = search(pos, 1, -INF, INF, maximizing, true, result_move);
+    *result_depth = 1;
+    int curr_depth = 2;
+    while (now() - start < (target * 0.7)) {
         // todo: break on mate or 1 legal move
+        double time_before = now();
         curr_eval =
             search(pos, curr_depth, -INF, INF, maximizing, true, &best_move);
+        double search_time = now() - time_before;
+
+        if (abs(curr_eval) >= 50000) {
+            break;
+        }
+
+        if (search_time > target * 0.3)
+            break;
         curr_depth++;
-    } while (now() - start < target);
+    }
 
     *result_depth = curr_depth - 1;
     *result_eval = curr_eval;
