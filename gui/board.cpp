@@ -1,10 +1,10 @@
 #include "board.hpp"
 #include "game.hpp"
 #include "textures.h"
-#include <iostream>
-#include <optional>
 #include <algorithm>
 #include <cmath>
+#include <iostream>
+#include <optional>
 
 #ifdef EMSCRIPTEN
 #include <emscripten/emscripten.h>
@@ -165,7 +165,11 @@ void getBestMove(void *arg) {
             game->onBook = false;
         } else {
             bestMove = move;
+#ifdef EMSCRIPTEN
+            emscripten_sleep(1000);
+#else
             std::this_thread::sleep_for(std::chrono::seconds(1));
+#endif
             engineStatus = 1;
             return;
         }
