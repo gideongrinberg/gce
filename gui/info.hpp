@@ -29,8 +29,8 @@ class InfoWindow : public GuiWindow {
         }
 
         if (!currentOpening.empty()) {
-            ImGui::Text("%s (%s book)", currentOpening.c_str(),
-                        game.onBook ? "on" : "off");
+            ImGui::TextWrapped("%s (%s book)", currentOpening.c_str(),
+                               game.onBook ? "on" : "off");
         }
 
         ImGui::InputText("##", fenBuffer, sizeof(fenBuffer));

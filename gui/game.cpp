@@ -10,6 +10,17 @@
 #include <memory>
 #include <vector>
 
+#ifdef EMSCRIPTEN
+#include <emscripten/emscripten.h>
+
+// clang-format off
+EM_JS(int, isMobile, (), {
+    var ua = navigator.userAgent || navigator.vendor || window.opera;
+    return (/android/i.test(ua) || /iPad|iPhone|iPod/.test(ua)) ? 1 : 0;
+});
+// clang-format on
+#endif
+
 Game::Game(int width, int height)
     : width(width), height(height), state(NEW_GAME),
       book(PolyglotBook(human_bin, human_bin_len)), onBook(true) {
@@ -51,9 +62,17 @@ void Game::setup() {
     rlImGuiSetup(true);
     ImGuiIO &io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-    ImGui::LoadIniSettingsFromMemory(reinterpret_cast<const char *>(layout_ini),
-                                     layout_ini_len);
-
+#ifdef EMSCRIPTEN
+    if (isMobile()) {
+        ImGui::LoadIniSettingsFromMemory(
+            reinterpret_cast<const char *>(vertical_ini), vertical_ini_len);
+    } else {
+#endif
+        ImGui::LoadIniSettingsFromMemory(
+            reinterpret_cast<const char *>(layout_ini), layout_ini_len);
+#ifdef EMSCRIPTEN
+    }
+#endif
     ImVec4 imguiBgColor = ImGui::GetStyleColorVec4(ImGuiCol_WindowBg);
     bgColor = {static_cast<unsigned char>(imguiBgColor.x * 255.0f),
                static_cast<unsigned char>(imguiBgColor.y * 255.0f),

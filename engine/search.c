@@ -189,7 +189,7 @@ void get_best_move_ex(Position *pos, float time_available, float increment,
     *result_eval = search(pos, 1, -INF, INF, maximizing, true, result_move);
     *result_depth = 1;
     int curr_depth = 2;
-    while (now() - start < (target * 0.7)) {
+    while (now() - start < (target * 0.9)) {
         // todo: break on mate or 1 legal move
         double time_before = now();
         curr_eval =
@@ -200,8 +200,9 @@ void get_best_move_ex(Position *pos, float time_available, float increment,
             break;
         }
 
-        if (search_time > target * 0.3)
+        if ((now() - start) + (search_time * 2) >= target * 0.8)
             break;
+
         curr_depth++;
     }
 
